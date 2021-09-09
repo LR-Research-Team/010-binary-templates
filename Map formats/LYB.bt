@@ -43,20 +43,27 @@ typedef struct assetStructHeader_s
     uint32 assetOffset<name="Asset offset">;
     uint32 assetCount<name="Asset count">;
     uint32 assetSize<name="Asset size">;
-}assetStructHeader_t;
+}assetStructHeader_t<name="Asset structure header">;
 
 typedef struct assetStructDataTypes_s        
 {
     uint16 byteOffset<name="Byte offset of start of type">;
-    uint16 dataType<name="Data type (struct type?)";
-}assetStructDataTypes_t;
+    uint16 dataType<name="Data type (struct type?)">;
+}assetStructDataTypes_t<name="Asset structure datatype">;
 
-typedef struct assetStruct_s {
+typedef struct assetStruct_s(int rStart) {
     uint32 headerOffset<name="Header offset">;
     uint32 dataTypeOffset<name ="Data Type / Description Offset">;
     uint32 headerCount<name="Header count">;
     Assert(headerCount==1); //Check if always 1
-    uint32 dataTypeCount<name="Number of assetDataType_struct">;
+    uint32 dataTypeCount<name="assetStructDataType count">;
+
+    local int checkpoint<hidden=true> = FTell();
+    FSeek(rStart + headerOffset);
+    assetStructHeader_t assetStructHeader;
+    FSeek(rStart + dataTypeOffset);
+    assetStructDataTypes_t assetStructDataTypes[dataTypeCount];
+    FSeek(checkpoint);
 }assetStruct_t<name="Asset struct">;
 
 /* Asset header*/
@@ -92,6 +99,11 @@ typedef struct asset_s(int rStart, int bIsFirstEntry) {
     }
 }asset_t<name="Asset">;
 
+typedef struct assetStructContainer_s(int structCount, int rStart)
+{
+    assetStruct_t assetStruct(rStart)[structCount]<optimize=false>;
+}assetStructContainer_t<name = "Asset structures">;
+
 typedef struct assetContainer_s(int assetCount, int rStart)
 {
     local int i<hidden=true>;
@@ -113,7 +125,6 @@ struct FILE {
     FSeek(rStart + lybHeader.headerSize);
     uint32 assetOffsets[lybHeader.assetCount]<name="Asset offsets">;
     FSeek(rStart + lybHeader.assetStructOffset);
-    assetStruct_t assetStruct[lybHeader.assetStructCount]<name="Asset structures">;
-    
+    assetStructContainer_t assetStructContainer(lybHeader.assetStructCount,rStart)<name="Asset structures">;   
     assetContainer_t assetContainer(lybHeader.assetCount, rStart);
 } File<name="LYB", open=true>;
