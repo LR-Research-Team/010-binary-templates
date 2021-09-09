@@ -21,17 +21,24 @@ typedef struct VECTOR3 {
 
 typedef struct BaseObject_s(int rStart)
 {
-    FSkip(0x18);
+    uint32 unk0[2]<hidden=true>;
+    //Check if these 2 values are always null
+    Assert(!(unk0[0] + unk0[1]));
+
+    uint32 pointerToInstancesListOffset<name="Pointer to instances list offset",comment="Go to this offset and follow the new value to get a list of instances names">;
+    FSkip(0xC);
     uint32 pathOffset<name="Object path offset">;
     local string path<name="Object path"> = ReadString(rStart + pathOffset);
    
 }BaseObject_t;
 
-typedef struct InstanceObject_s
+typedef struct InstanceObject_s(int rStart)
 {
     uint32 unk0[4];
     Vector3 position<name="Position">;
-    uint32 BaseObjectOffset<name="Prefab offset">;
+    uint32 baseObjectOffset<name="Base object offset">;
+    local uint tmp<hidden=true> = ReadUInt(rStart + baseObjectOffset + 12);
+    local string baseObjectName<name="Base object name"> = ReadString(rStart + tmp);
     Vector3 rotation<name="Rotation",comment="In radians">;
     uint32 unk1<name="Padding ?">;
     Vector3 scale<name="Scale">;

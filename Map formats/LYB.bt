@@ -66,7 +66,7 @@ typedef struct assetHeader_s(int rStart, int bIsFirstEntry) {
         switch(assetType)
         {
             case "RefObjects/InstanceObject":
-                InstanceObject_t instanceobj<name="Instance object",open=true>;
+                InstanceObject_t instanceobj(rStart)<name="Instance object",open=true>;
                 break;
             case "BaseObjects/BG/BGChipBaseObject":
                 BaseObject_t baseobj(rStart)<name="Base object",open=true>;
