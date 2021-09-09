@@ -13,14 +13,31 @@
 #ifndef LYB_ASSETS
 #define LYB_ASSETS
 
+typedef struct VECTOR3 {
+    float x<name="x">;
+    float y<name="y">;
+    float z<name="z">;
+} Vector3;
+
 typedef struct BGChipBaseObject_s
 {
    
-}BGChipBaseObject_t
+}BGChipBaseObject_t;
 
 typedef struct InstanceObject_s
 {
+    uint32 unk0[4];
+    Vector3 position<name="Position">;
+    uint32 prefabOffset<name="Prefab offset">;
+    Vector3 rotation<name="Rotation",comment="In radians">;
+    uint32 unk1<name="Padding ?">;
+    Vector3 scale<name="Scale">;
+    float unk2<name="Padding ?">;
+    uint32 reserved[4]<name="Reserved">;
+
+    //Make sure that all these are 0
+    Assert(!(reserved[0] + reserved[1] + reserved[2] +reserved[3] + unk1 + unk2));
     
-}InstanceObject_t
+}InstanceObject_t;
 
 #endif // LYB_ASSETS

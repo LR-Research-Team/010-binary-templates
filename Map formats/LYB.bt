@@ -45,7 +45,7 @@ typedef struct entry2_s {
 
 /* Asset header*/
 typedef struct assetHeader_s(int rStart, int bIsFirstEntry) {
-    uint32 id<name="ID ?", comment="First byte seems to increment">;
+    uint32 id<name="ID ?", comment="Except for first 2 entries seems like an ID">;
     uint32 hash<name="Hash ?", comment = "Not sure">;
     uint32 assetTypeOffset<name="Asset type offset", comment = "Base type if 0 or first entry">;
     uint32 assetNameOffset<name="Asset name offset">;
@@ -72,7 +72,7 @@ typedef struct assetHeader_s(int rStart, int bIsFirstEntry) {
                 break;
         }
     }
-}assetHeader_t<name="Asset header">;
+}assetHeader_t<name="Asset">;
 
 typedef struct assetContainer_s(int assetCount, int rStart)
 {
