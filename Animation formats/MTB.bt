@@ -1,0 +1,375 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: mtb.bt
+//   Authors: Joschka, based on nohbdy's research : https://github.com/nohbdy/ffxivmodelviewer/blob/master/src/DatDigger/Sections/Animation/MtbSection.cs
+//   Version: 0.1
+//   Purpose: Parsing mtb files
+//  Category: Game file
+// File Mask: *.mtb
+//  ID Bytes: MTB
+//   History: 
+//------------------------------------------------
+LittleEndian();
+
+void Align(int n) {
+    local int value = FTell() % n;
+
+    if (value) {
+        FSkip(n - value);
+    }
+}
+
+/* string blocks helpers */
+typedef struct name_s
+{
+    string name<name="name">;
+
+}name_t;
+
+typedef struct names_s(int count)
+{
+    name_t names[count]<optimize=false, name="names">;
+
+}names_t;
+
+/* index + flags combination */
+typedef struct chunkIndex_s
+{
+    uint idx <read=Str("%d",this[0]&0x7fffffff)>;
+    FSkip(-4);
+    //field & 0x80000000
+    int : 31;
+    int flags : 1;
+    
+}chunkIndex_t;
+
+/* Actual mtb header */
+typedef struct mtbHeaderSection_s
+{
+    FSkip(0x10);
+    float framerate<name="Framerate">;
+    float animationLength<name="Animation length">;
+    uint16 jointCount<name="Joint count">;
+    uint16 indicesCount<name="Indices count">;
+    ubyte flags<name="Flags">;
+    FSkip(3);
+    chunkIndex_t chunk[indicesCount]<name="Chunk indices">;
+
+}mtbHeaderSection_t;
+
+/* "Root" section, purpose unknown */
+typedef struct rootSection_s
+{
+    FSkip(0x10);
+    int jointHash<name="Joint hash", format=hex>;
+}rootHeaderSection_t;
+
+typedef enum<ushort> semantic_e
+{
+    QuatCurve = 0,
+    TransXCompressedLinear = 4,
+    TransYCompressedLinear = 5,
+    TransZCompressedLinear = 6,
+    ScaleXCompressedLinear = 7,
+    ScaleYCompressedLinear = 8,
+    ScaleZCompressedLinear = 9,
+    TransXConstant = 11,
+    TransYConstant = 12,
+    TransZConstant = 13,
+    ScaleXConstant = 14,
+    ScaleYConstant = 15,
+    ScaleZConstant = 16
+    
+}ESemantic<name="Semantic">;
+
+typedef struct timing_s(int length, int i)
+{
+    local int j<hidden=true> = 0;
+    local int timing[length]<name="Timings">;
+    for(j = 0; j < length; j++)
+    {
+        ubyte t<hidden=true>;
+        timing[j] = t + 256*i;
+    }
+}timing_t;
+
+typedef struct qValue_s(int length, float scale, float bias, int bitwidth)
+{
+    local int j<hidden=true> = 0;
+    local float qValues[length]<name="Dequantized values">;
+    local int bIsNeg<hidden=true>;
+    if (bitwidth == 1)
+        for(j = 0; j < length; j++)
+        {
+            ubyte v<hidden=true>;
+            bIsNeg = (v & 0x80) ? 1 : 0;
+            qValues[j] = (v & 0x7F) / (float)127;
+            qValues[j] = bIsNeg ? -qValues[j]*scale + bias : qValues[j]*scale + bias;
+        }
+    else if (bitwidth == 2)
+        for(j = 0; j < length; j++)
+        {
+            ushort v<hidden=true>;
+            bIsNeg = (v & 0x8000) ? 1 : 0;
+            qValues[j] = (v & 0x7FFF) / (float)32767;
+            qValues[j] = bIsNeg ? -qValues[j]*scale + bias : qValues[j]*scale + bias;
+        }
+        
+}qValue_t;
+
+typedef struct quatTimeValue_s
+{
+    local int timing<name="Timing">;
+    local float x<name="X">;
+    local float y<name="Y">;
+    local float z<name="Z">;
+    local float w<name="W">;     
+}quatTimeValue_t;
+
+void QuatNorm(quatTimeValue_t& q) 
+{
+    local float norm = Sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+    q.x = q.x/norm;
+    q.y = q.y/norm;
+    q.z = q.z/norm;
+    q.w = q.w/norm;
+}
+
+typedef struct quatValue_s(int length, int tOffset, int flag)
+{
+    local int j<hidden=true> = 0;
+    local quatTimeValue_t quatTimeValues[length]<name="Dequantized quaternions">;
+
+    local uint64 bitfield<hidden=true> = 0;
+    local int signFlags<hidden=true>;
+    local int val<hidden=true>;
+    local int wVal<hidden=true>;
+
+    local double dVal<hidden=true>;
+    local double sqrtVal<hidden=true>;
+    local double sqrtValWholePart<hidden=true>;
+    local double v44<hidden=true>;
+    local double tmp6<hidden=true>; 
+    local double tmp<hidden=true>;
+    local double t[4]<hidden=true>;
+    local float r[3]<hidden=true>;
+    
+    for(j = 0; j < length; j++)
+    {
+        uint16 bitfield0<hidden=true>;
+        uint16 bitfield1<hidden=true>;
+        uint16 bitfield2<hidden=true>;
+        bitfield = (int64)bitfield0 << 32;
+        bitfield |= (int64)bitfield1 << 16;
+        bitfield |= (int64)bitfield2;
+
+        quatTimeValues[j].timing = (int)(bitfield >> 43) & 0x1F;
+        quatTimeValues[j].timing += tOffset*32;
+        signFlags = (int)(bitfield >> 39) & 0x0F;
+        val = (int)(bitfield >> 17) & 0x3FFFFF; 
+        wVal = (int)(bitfield & 0x1FFFF);
+
+        quatTimeValues[j].w = (float)wVal / 131071.0f;
+        quatTimeValues[j].w = flag ? 1 - quatTimeValues[j].w *quatTimeValues[j].w : quatTimeValues[j].w;
+        if(signFlags & 0x8)
+        {
+            quatTimeValues[j].w = -quatTimeValues[j].w;
+            signFlags ^= 0xF;
+        }
+
+        dVal = (double)val;
+        sqrtVal = Sqrt(dVal);
+        sqrtValWholePart = Floor(sqrtVal);
+        v44 = PI/2 * (1-sqrtValWholePart/2047.0);
+        tmp = (sqrtValWholePart < 0.001) ? 0 : PI/2 * (dVal - sqrtValWholePart * sqrtValWholePart) / (2 * sqrtValWholePart);
+        tmp6 = Sqrt(1-quatTimeValues[j].w *quatTimeValues[j].w);
+        t[0] = Sin(-tmp*180/PI);
+        t[1] = Sin((PI/2 - tmp)*180/PI);
+        t[2] = Sin(v44*180/PI);
+        t[3] = Sin((v44 - PI/2)*180/PI);
+        r[0] = (float)(t[1] * -t[3] * tmp6);
+        r[1] = (float)(t[2] * tmp6);
+        r[2] = (float)(-t[0] * -t[3] * tmp6);
+
+        quatTimeValues[j].x = (signFlags & 0x4)  ? -r[0] : r[0];
+        quatTimeValues[j].y = (signFlags & 0x2)  ? -r[1] : r[1];
+        quatTimeValues[j].z = (signFlags & 0x1)  ? -r[2] : r[2];
+        //QuatNorm(quatTimeValues[j]); Not necessary
+    }
+        
+}quatValue_t;
+
+/* Joint anim track*/
+typedef struct spuTrack_s
+{
+    BigEndian();
+    int jointHash<name="Joint hash", format=hex>;
+    ESemantic semantic;
+    ushort packedCount<name="Bitpacked count">;
+    switch(semantic)
+    {
+        case QuatCurve:
+            local int flag<name="Flag"> = packedCount & 0x80 ? 1 : 0;
+            local int count<name="Count"> = packedCount & 0xFF7F;
+            ubyte lengths[count]<name = "Track lengths">;
+            FSkip(4 - count);
+            local int i<hidden=true> = 0;
+            local int j<hidden=true> = 0;
+            local int length<hidden=true>;
+            
+            for(i = 0; i < count; i++)
+            {
+                length = lengths[i];                
+                quatValue_t quatValue(length, i, flag)<name="Dequantized quaternion values">;               
+            }
+            break;
+
+        case TransXCompressedLinear:
+        case TransYCompressedLinear:
+        case TransZCompressedLinear:
+        case ScaleXCompressedLinear:
+        case ScaleYCompressedLinear:
+        case ScaleZCompressedLinear:
+            local int flag<name="Flag"> = packedCount & 0x8000 ? 1 : 0;
+            local int count<name="Count"> = packedCount & 0x7FFF;
+            float bias<name = "Bias">;
+            float scale<name = "Scale">;
+            ubyte lengths[count]<name = "Track lengths">;
+            local int i<hidden=true> = 0;
+            local int length<hidden=true>;
+            for(i = 0; i < count; i++)
+            {
+                length = lengths[i] ? lengths[i] : 1;
+                timing_t timings(length, i)<name="Timings">;
+                if(flag)
+                    qValue_t qValue(length, scale, bias, 2)<name="Dequantized values">;
+                else
+                    qValue_t qValue(length, scale, bias, 1)<name="Dequantized values">;
+                          
+            }
+            Align(4);
+            break;
+
+       case TransXConstant:
+       case TransYConstant:
+       case TransZConstant:        
+       case ScaleXConstant:
+       case ScaleYConstant:
+       case ScaleZConstant:
+            local int flag<name="Flag"> = packedCount & 0x8000 ? 1 : 0;
+            local int count<name="Count"> = packedCount & 0x7FFF;
+            float value<name="Value">;
+            break;
+    }
+
+
+
+}spuTrack_t<name="Spu track">;
+
+/* Spu chunk */
+typedef struct spuChunk_s(int sectionStart)
+{
+    BigEndian();
+    uint32 offset<name="Chunk offset">;
+    uint16 size<name="Chunk size">;
+    ubyte childCount<name="Child count">;
+    ubyte flag<name="Flag">;
+    local int checkpoint<hidden=true> = FTell();
+
+    FSeek(offset + sectionStart);
+    local int i<hidden=true> = 0;
+    for(i = 0; i < childCount; i++)
+    {
+        spuTrack_t track;
+    }   
+    FSeek(checkpoint);
+    LittleEndian();
+    
+}spuChunk_t<name="Spu chunk">;
+
+/* Spu section */
+typedef struct spuSection_s(int index,int sectionStart, names_t& chunkNames)
+{
+    BigEndian();
+    local string name = chunkNames.names[index].name;
+    uint32 offset<name="Section Offset">;
+    uint32 chunkCount<name="Chunk count">;
+    
+    if(chunkCount)
+    {
+       FSeek(sectionStart + spuSection.offset);
+       spuChunk_t spuChunks(sectionStart)[spuSection.chunkCount]<name="Spu chunks", optimize=false>;
+    }
+    
+    LittleEndian();
+    
+}spuSection_t<name="Spu section">;
+
+/* Spu binary section, contains the actual frame data */
+typedef struct spuBinarySection_s(names_t& chunkNames)
+{
+    FSkip(0x10);
+    BigEndian();
+    int sectionSize<name="Section size">;
+    FSkip(0xC);
+    local int sectionStart<name="Section start",hidden=true> = FTell(); //Section size is taken from there
+    LittleEndian();
+    ubyte sectionCount<name="Section count">;
+    ubyte unk;
+    uint16 jointCount<name="Joint count">;
+    FSkip(0xC);    
+    local int i<hidden=true>;
+    local int checkpoint<hidden=true> = FTell();
+    for(i = 0; i < sectionCount; i++)
+    {
+        checkpoint = FTell();
+        spuSection_t spuSection(i,sectionStart, chunkNames)<name="Spu section">;   
+        FSeek(checkpoint + 8);
+    }
+
+}spuBinarySection_t;
+
+/* Parsing logic */
+struct FILE {
+
+    FSeek(0x40); //Skip the SEDB header
+    uint32 sectionCount<name = "Section count">;
+    uint32 sectionOffsets[sectionCount]<name = "Section offsets">;
+    //Section names
+    uint32 sectionNameCount<name = "Section names count">;
+    uint32 sectionNameOffsets[sectionNameCount]<name = "Section names offsets">;
+    local int checkpoint<hidden=true> = FTell();
+    FSeek(sectionNameOffsets[0]);
+    names_t sectionNames(sectionNameCount)<name="Section names">;    
+    FSeek(checkpoint);
+    //Chunk names
+    uint32 chunkNameCount<name = "Chunk names count">;
+    uint32 chunkNameOffsets[chunkNameCount]<name = "Chunk names offsets">;
+    checkpoint = FTell();
+    FSeek(chunkNameOffsets[0]);
+    names_t chunkNames(chunkNameCount)<name="Chunk names">;    
+    FSeek(checkpoint);
+
+    //Process the individual sections
+    local int i<hidden=true> = 0;
+    for(i = 0; i < sectionCount; i++)
+    {
+        FSeek(sectionOffsets[i]);
+        uint32 a<hidden=true>;
+        FSkip(-4);
+        if (!Strcmp(sectionNames.names[a].name,"Header"))
+        {            
+            mtbHeaderSection_t mtbHeader<name="Mtb header">;
+        }
+        else if (!Strcmp(sectionNames.names[a].name,"root"))
+        {
+            rootHeaderSection_t rootSection<name="Root section">;
+        }
+        else if (!Strcmp(sectionNames.names[a].name,"SpuBinary"))
+        {
+            spuBinarySection_t spuBinary(chunkNames)<name="Spu binary">;
+        }
+    }    
+    
+} File<name="MTB", open=true>;
