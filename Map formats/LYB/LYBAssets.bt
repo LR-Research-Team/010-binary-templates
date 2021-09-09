@@ -19,7 +19,7 @@ typedef struct VECTOR3 {
     float z<name="z">;
 } Vector3;
 
-typedef struct BaseObject_s(int rStart)
+typedef struct BGChipBaseObject_s(int rStart)
 {
     uint32 unk0[2]<hidden=true>;
     //Check if these 2 values are always null
@@ -30,7 +30,7 @@ typedef struct BaseObject_s(int rStart)
     uint32 pathOffset<name="Object path offset">;
     local string path<name="Object path"> = ReadString(rStart + pathOffset);
    
-}BaseObject_t;
+}BGChipBaseObject_t;
 
 typedef struct InstanceObject_s(int rStart)
 {

@@ -38,9 +38,25 @@ typedef struct lybHeader_s {
     
 }lybHeader_t<name="SEDBHeader">;
 
-/* 16 bytes struct after the offsets*/
+typedef struct assetStructHeader_s
+{
+    uint32 assetOffset<name="Asset offset">;
+    uint32 assetCount<name="Asset count">;
+    uint32 assetSize<name="Asset size">;
+}assetStructHeader_t;
+
+typedef struct assetStructDataTypes_s        
+{
+    uint16 byteOffset<name="Byte offset of start of type">;
+    uint16 dataType<name="Data type (struct type?)";
+}assetStructDataTypes_t;
+
 typedef struct assetStruct_s {
-    
+    uint32 headerOffset<name="Header offset">;
+    uint32 dataTypeOffset<name ="Data Type / Description Offset">;
+    uint32 headerCount<name="Header count">;
+    Assert(headerCount==1); //Check if always 1
+    uint32 dataTypeCount<name="Number of assetDataType_struct">;
 }assetStruct_t<name="Asset struct">;
 
 /* Asset header*/
@@ -69,7 +85,7 @@ typedef struct asset_s(int rStart, int bIsFirstEntry) {
                 InstanceObject_t instanceobj(rStart)<name="Instance object",open=true>;
                 break;
             case "BaseObjects/BG/BGChipBaseObject":
-                BaseObject_t baseobj(rStart)<name="Base object",open=true>;
+                BGChipBaseObject_t baseobj(rStart)<name="BG Chip Base object",open=true>;
             default:
                 break;
         }
@@ -92,7 +108,7 @@ struct FILE {
     /* Header info parsing*/
     SEDBHeader_t sedbHeader<name="SEDB Header">;
     FSeek(sedbHeader.resOffset);
-    local int rStart = FTell(); //All offsets in the resource start from here
+    local int rStart<hidden=true> = FTell(); //All offsets in the resource start from here
     lybHeader_t lybHeader<name="lyb Header">;
     FSeek(rStart + lybHeader.headerSize);
     uint32 assetOffsets[lybHeader.assetCount]<name="Asset offsets">;
