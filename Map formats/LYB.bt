@@ -2,13 +2,15 @@
 //--- 010 Editor v12.0beta1 Binary Template
 //      File: lyb.bt
 //   Authors: Joschka
-//   Version: 0.1
+//   Version: 0.2
 //   Purpose: Parsing lyb files
 //  Category: Game file
 // File Mask: *.lyb
 //  ID Bytes: LYB
 //   History: 
 //------------------------------------------------
+
+#include "LYB/LYBAssets.bt"
 
 /* SEDBlyb */
 typedef struct SEDBHeader_s {
@@ -29,19 +31,71 @@ typedef struct lybHeader_s {
     char FourCC[4]<name="FourCC">;
     uint32 size<name="Resource size">;
     uint16 entry2Count<name="Entry 2 count">;
-    uint16 entry1Count<name="Entry 1 count">;
+    uint16 assetCount<name="Asset count">;
     uint16 unk[2];
     uint32 entry2Offset<name="Entry 2 offset">;
     uint32 headerSize<name="Header size">;
     
 }lybHeader_t<name="SEDBHeader">;
 
+/* 16 bytes struct after the offsets*/
+typedef struct entry2_s {
+    
+}entry2_t<name="Entry 2",size=0x10>;
+
+/* Asset header*/
+typedef struct assetHeader_s(int rStart, int bIsFirstEntry) {
+    uint32 id<name="ID ?", comment="First byte seems to increment">;
+    uint32 hash<name="Hash ?", comment = "Not sure">;
+    uint32 assetTypeOffset<name="Asset type offset", comment = "Base type if 0 or first entry">;
+    uint32 assetNameOffset<name="Asset name offset">;
+
+    //For the asset type, we need to make sure the offset is not 0 (base type) or the first entry (base type too it seems)
+    if (!assetTypeOffset || bIsFirstEntry)
+    {
+        local string assetName<name="Base asset"> = ReadString(rStart + assetNameOffset);
+    }
+    else
+    {
+        local string assetName<name="Asset name"> = ReadString(rStart + assetNameOffset);
+        //jump to the offset, grab the base type from there
+        local uint tmp<hidden=true> = ReadUInt(rStart + assetTypeOffset + 12);
+        local string assetType<name="Asset type"> = ReadString(rStart + tmp);
+
+        //Parse the data depending whether or not the asset has already been documented already in LYBAssets.bt
+        switch(assetType)
+        {
+            case "RefObjects/InstanceObject":
+                InstanceObject_t instanceobj<name="Instance object">;
+                break;
+            default:
+                break;
+        }
+    }
+}assetHeader_t<name="Asset header">;
+
+typedef struct assetContainer_s(int assetCount, int rStart)
+{
+    local int i<hidden=true>;
+    for(i = 0; i < assetCount; i++)
+    {
+        FSeek(rStart + assetOffsets[i]);
+        assetHeader_t assetHeader(rStart, !i);
+    }
+}assetContainer_t<name = "Assets">;
+
 /* Parsing logic */
 struct FILE {
 
+    /* Header info parsing*/
     SEDBHeader_t sedbHeader<name="SEDB Header">;
     FSeek(sedbHeader.resOffset);
-    local int resourceStart = FTell(); //All offsets in the resource start from here
+    local int rStart = FTell(); //All offsets in the resource start from here
     lybHeader_t lybHeader<name="lyb Header">;
+    FSeek(rStart + lybHeader.headerSize);
+    uint32 assetOffsets[lybHeader.assetCount]<name="Asset offsets">;
+    FSeek(rStart + lybHeader.entry2Offset);
+    entry2_t entries2[lybHeader.entry2Count]<name="Entries 2">;
     
+    assetContainer_t assetContainer(lybHeader.assetCount, rStart);
 } File<name="LYB", open=true>;

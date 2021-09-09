@@ -1,0 +1,26 @@
+//------------------------------------------------
+//--- 010 Editor v12.0beta1 Binary Template
+//      File: LYBAssets.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Helper structs for lyb parsing
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#ifndef LYB_ASSETS
+#define LYB_ASSETS
+
+typedef struct BGChipBaseObject_s
+{
+   
+}BGChipBaseObject_t
+
+typedef struct InstanceObject_s
+{
+    
+}InstanceObject_t
+
+#endif // LYB_ASSETS
