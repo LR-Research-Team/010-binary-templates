@@ -1,0 +1,47 @@
+//------------------------------------------------
+//--- 010 Editor v12.0beta1 Binary Template
+//      File: lyb.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Parsing lyb files
+//  Category: Game file
+// File Mask: *.lyb
+//  ID Bytes: LYB
+//   History: 
+//------------------------------------------------
+
+/* SEDBlyb */
+typedef struct SEDBHeader_s {
+    char FourCC[4]<name="FourCC">;
+    char type[4]<name="Section type">;
+    int  version<name = "Version">;
+    BigEndian(); //probably 2 bytes rather than endian swap
+    ushort resourceID<name = "Resource ID">;
+    LittleEndian();
+    ushort resOffset<name="Resource offset">;
+    int  size<name="Size">;
+    int reserved[7]<name="Reserved">;    
+    
+}SEDBHeader_t<name="SEDBHeader">;
+
+/* lyb resource header*/
+typedef struct lybHeader_s {
+    char FourCC[4]<name="FourCC">;
+    uint32 size<name="Resource size">;
+    uint16 entry2Count<name="Entry 2 count">;
+    uint16 entry1Count<name="Entry 1 count">;
+    uint16 unk[2];
+    uint32 entry2Offset<name="Entry 2 offset">;
+    uint32 headerSize<name="Header size">;
+    
+}lybHeader_t<name="SEDBHeader">;
+
+/* Parsing logic */
+struct FILE {
+
+    SEDBHeader_t sedbHeader<name="SEDB Header">;
+    FSeek(sedbHeader.resOffset);
+    local int resourceStart = FTell(); //All offsets in the resource start from here
+    lybHeader_t lybHeader<name="lyb Header">;
+    
+} File<name="LYB", open=true>;
