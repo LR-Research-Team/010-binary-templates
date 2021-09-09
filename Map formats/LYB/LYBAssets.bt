@@ -19,16 +19,16 @@ typedef struct VECTOR3 {
     float z<name="z">;
 } Vector3;
 
-typedef struct BGChipBaseObject_s
+typedef struct BaseObject_s
 {
    
-}BGChipBaseObject_t;
+}BaseObject_t;
 
 typedef struct InstanceObject_s
 {
     uint32 unk0[4];
     Vector3 position<name="Position">;
-    uint32 prefabOffset<name="Prefab offset">;
+    uint32 BaseObjectOffset<name="Prefab offset">;
     Vector3 rotation<name="Rotation",comment="In radians">;
     uint32 unk1<name="Padding ?">;
     Vector3 scale<name="Scale">;
