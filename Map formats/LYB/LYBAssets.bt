@@ -19,8 +19,11 @@ typedef struct VECTOR3 {
     float z<name="z">;
 } Vector3;
 
-typedef struct BaseObject_s
+typedef struct BaseObject_s(int rStart)
 {
+    FSkip(0x18);
+    uint32 pathOffset<name="Object path offset">;
+    local string path<name="Object path"> = ReadString(rStart + pathOffset);
    
 }BaseObject_t;
 
