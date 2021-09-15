@@ -2,7 +2,7 @@
 //--- 010 Editor v12.0beta1 Binary Template
 //      File: lyb.bt
 //   Authors: Joschka, GreenThumb2
-//   Version: 0.2
+//   Version: 0.3
 //   Purpose: Parsing lyb files
 //  Category: Game file
 // File Mask: *.lyb
@@ -10,6 +10,7 @@
 //   History: 
 //------------------------------------------------
 
+#include "LYB/LYBUnamedAssets.bt"
 #include "LYB/LYBAssets.bt"
 
 /* SEDBlyb */
@@ -38,6 +39,13 @@ typedef struct lybHeader_s {
     
 }lybHeader_t<name="SEDBHeader">;
 
+typedef enum<ushort> assetStructDatatype_e
+{
+    OffsetToOtherAsset = 0,
+    OffsetToString = 2
+    
+}EAssetStructDatatype<name="Asset struct data type">;
+
 typedef struct assetStructHeader_s
 {
     uint32 assetOffset<name="Asset offset">;
@@ -48,7 +56,7 @@ typedef struct assetStructHeader_s
 typedef struct assetStructDataTypes_s        
 {
     uint16 byteOffset<name="Byte offset of start of type">;
-    uint16 dataType<name="Data type (struct type?)">;
+    EAssetStructDatatype dataType<name="Data type ">;
 }assetStructDataTypes_t<name="Asset structure datatype">;
 
 typedef struct assetStruct_s(int rStart) {
@@ -68,15 +76,23 @@ typedef struct assetStruct_s(int rStart) {
 
 /* Asset header*/
 typedef struct asset_s(int rStart, int bIsFirstEntry) {
-    uint32 id<name="ID ?", comment="Except for first 2 entries seems like an ID">;
-    uint32 hash<name="Hash ?", comment = "Not sure">;
-    uint32 assetTypeOffset<name="Asset type offset", comment = "Base type if 0 or first entry">;
-    uint32 assetNameOffset<name="Asset name offset">;
+    uint32 id<name="ID ?", comment="Except for first 2 entries seems like an ID",bgcolor=cBlue>;
+    uint32 hash<name="Hash ?", comment = "Not sure",bgcolor=cBlue>;
+    uint32 assetTypeOffset<name="Asset type offset", comment = "Base type if 0 or first entry",bgcolor=cBlue>;
+    uint32 assetNameOffset<name="Asset name offset",bgcolor=cBlue>;
 
     //For the asset type, we need to make sure the offset is not 0 (base type) or the first entry (base type too it seems)
     if (!assetTypeOffset || bIsFirstEntry)
     {
         local string assetName<name="Base asset"> = ReadString(rStart + assetNameOffset);
+        switch(assetName)
+        {
+            case "MiscObjects/LaySettings/LaySettingsObject":
+                LaySettingsObject_t laysetobj(rStart, 1)<name="Layout settings object", open=true>;
+                break;
+            default:                
+                break;
+        }
     }
     else
     {
@@ -93,6 +109,10 @@ typedef struct asset_s(int rStart, int bIsFirstEntry) {
                 break;
             case "BaseObjects/BG/BGChipBaseObject":
                 BGChipBaseObject_t baseobj(rStart)<name="BG Chip Base object",open=true>;
+                break;
+            case "MiscObjects/LaySettings/LaySettingsObject":
+                LaySettingsObject_t laysetobj(rStart, 0)<name="Layout settings object", open=true>;
+                break;
             default:
                 break;
         }
@@ -127,4 +147,4 @@ struct FILE {
     FSeek(rStart + lybHeader.assetStructOffset);
     assetStructContainer_t assetStructContainer(lybHeader.assetStructCount,rStart)<name="Asset structures">;   
     assetContainer_t assetContainer(lybHeader.assetCount, rStart);
-} File<name="LYB", open=true>;
+} File<name="LYB",bgcolor=cDkPurple, open=true>;
