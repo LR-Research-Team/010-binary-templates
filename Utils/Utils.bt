@@ -1,0 +1,30 @@
+//------------------------------------------------
+//--- 010 Editor v12.0beta1 Binary Template
+//      File: Utils.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Putting all commonly used functions/structs here
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#ifndef UTILS
+#define UTILS
+
+typedef struct VECTOR3 {
+    float x<name="x">;
+    float y<name="y">;
+    float z<name="z">;
+} Vector3;
+
+void Align(int n) {
+    local int value = FTell() % n;
+
+    if (value) {
+        FSkip(n - value);
+    }
+}
+
+#endif //UTILS

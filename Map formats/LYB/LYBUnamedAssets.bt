@@ -13,12 +13,6 @@
 #ifndef LYB_UN_ASSETS
 #define LYB_UN_ASSETS
 
-typedef struct VECTOR3 {
-    float x<name="x">;
-    float y<name="y">;
-    float z<name="z">;
-} Vector3;
-
 typedef struct LUT_s
 {
     byte LUTTexture[16384]<name="LUT", bgcolor=cDkGreen>;

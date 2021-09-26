@@ -12,13 +12,7 @@
 //------------------------------------------------
 LittleEndian();
 
-void Align(int n) {
-    local int value = FTell() % n;
-
-    if (value) {
-        FSkip(n - value);
-    }
-}
+#include "../Utils/Utils.bt"
 
 /* string blocks helpers */
 typedef struct name_s
