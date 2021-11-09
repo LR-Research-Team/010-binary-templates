@@ -1,0 +1,104 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trb.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Parsing trb files
+//  Category: Game file
+// File Mask: *.trb
+//  ID Bytes: SEDBRES
+//   History: 
+//------------------------------------------------
+LittleEndian();
+#include "Utils/TRBUtils.bt"
+#include "Sections/TRBPHB.bt"
+#include "Sections/TRBELB.bt"
+#include "Sections/TRBSKL.bt"
+#include "Sections/TRBWRB.bt"
+#include "Sections/TRBSHD.bt"
+#include "TRBChunk.bt"
+#include "TRBSection.bt"
+
+
+typedef struct Filepath_t_s
+{
+   string path;
+} Filepath_t;
+
+typedef struct ResExt_s
+{
+   char name[4];
+} ResExt_t;
+
+typedef struct ResExtSection_s(int resCount)
+{
+   ResExt_t resNames[header.resCount-2]<name="Res names">;
+   int extra[2]<comment="For RESOURCE_TYPE and RESOURCE_ID">;
+   Align(16);
+} ResExtSection_t;
+
+typedef struct trbHdr_s
+{
+   sectionHdr_t thdr;     
+   int fpCount<name="File path count">;
+   int fpOffset<name="File path offset">;
+   int resCount<name="Resource count">;
+   BYTE brt[4]<name="FourCC">;
+} trbHdr_t<name="TRB Header">;
+
+typedef struct trbResInfo_s
+{
+   int resIdx<name="Resource index">;
+   int resOffset<name="Resource offset">;
+   int resSize<name="Resource size">;
+   int resourceType<name="Resource type">;
+} trbResInfo_t<name="Resource Info">;
+
+struct FILE {
+    trbHdr_t header;
+    trbResInfo_t resInfo[header.resCount];
+    local int32 pos<hidden=true> = FTell();
+    local int a<hidden=true> = 0;
+    for( a = 0; a < header.resCount; a++ )
+    {
+        FSeek(resInfo[a].resOffset + pos);
+        switch(resInfo[a].resourceType) 
+        {
+            case 2:
+            case 4:
+            case 7:
+                byte id<hidden=true>;
+                FSkip(-1);
+                if(id > 10) //arbitrary, just to check if magic of proper section
+                    resSection_t res;
+                else
+                    {
+                      if(id == 0 || id ==8)//ps3 and win32 BE/LE change
+                       {
+                         Section08_t Section08<name="Resource section",read=Str("Section 8")>;
+                       }
+                      else if(id == 1)
+                       {
+                         Section01_t Section01<name="Resource section",read=Str("Section 1")>;
+                       }
+                      else if(id == 2)
+                       {
+                         Section02_t Section02<name="Resource section",read=Str("Section 2")>;
+                       }
+                    }
+                break;
+            default:
+                char temp<hidden=true>;
+                FSkip(-1);
+                if(temp=='b') //4 char bits of each previous section
+                {
+                   ResExtSection_t ResourceExtSection(header.resCount-2)<name = "Resources extensions section">;
+                }
+                
+                break;                    
+        }
+    }
+    FSeek(pos + header.fpOffset);
+    Filepath_t filepaths[header.fpCount]<name="filepath",optimize=false>;
+} File<name="TRB", open=true>;

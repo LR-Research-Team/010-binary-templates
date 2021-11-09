@@ -1,0 +1,146 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbSHD.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: SHD struct helpers
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct FILEData_s
+{
+   BigEndian();
+   local int checkpoint<hidden=true> = FTell();
+   uint blockSize;
+   uint nameOffset;
+   uint shaderOffset; 
+   string name;
+   FSeek(checkpoint + shaderOffset);
+   
+   uint checksum[4]<name="checksum ?">;
+   uint bytecodeLength;
+   uint unk[3];
+
+   byte bytecode[bytecodeLength];
+
+
+} FILEData_t<name="FILE data">;
+
+typedef struct VCAPData_s
+{
+   //Just throwing assertions around to make sure the section is consistent
+   LittleEndian();
+   uint64 unk[2];
+   Assert(unk[0] == 4095);
+   Assert(unk[1] == 0);
+    
+} VCAPData_t;
+
+typedef struct PCAPData_s
+{
+   //Seems to be 2 consistent blocks on all models, just throwing assertions around to make sure
+   LittleEndian();
+   uint64 unk[16];
+   /*Assert(unk[0] == 4294971391);
+   Assert(unk[1] == 0);
+   Assert(unk[2] == 38654705671);
+   Assert(unk[3] == 0);
+   Assert(unk[4] == 38654705683);
+   Assert(unk[5] == 0);
+   Assert(unk[6] == 38654705665);
+   Assert(unk[7] == 0);
+   Assert(unk[8] == 1103806599167);
+   Assert(unk[9] == 0);
+   Assert(unk[10] == 1138166333447);
+   Assert(unk[11] == 0);
+   Assert(unk[12] == 1138166333459);
+   Assert(unk[13] == 0);
+   Assert(unk[14] == 1138166333441);
+   Assert(unk[15] == 0);*/
+} PCAPData_t<name="PCAP data">;
+
+
+typedef struct ParameterName_s
+{
+   string name;   
+} ParameterName_t;
+
+typedef struct ParameterData_s
+{
+   LittleEndian();
+   ushort isPixelShaderParameter;
+   ushort valueCount;
+   uint32 reserved[3];
+   /*Assert(reserved[0] == 0);
+   Assert(reserved[1] == 0);
+   Assert(reserved[2] == 0);*/
+   Vector4 baseValues;
+   
+} ParameterData_t;
+
+typedef struct SamplerName_s
+{
+   string name;   
+} SamplerName_t;
+
+typedef struct SamplerData_s
+{
+   LittleEndian();
+   ubyte unk;
+   ubyte unk2;
+   ubyte nameSectionLength;
+   ubyte unk3;
+   uint unk4[7];
+   byte nameSection[nameSectionLength];  
+   
+} SamplerData_t;
+
+void ReadSamplerData(int checkpoint, uint samplerCount, uint offsets[])
+{
+    local int i<hidden=true> = 0;
+    for(i = 0; i<samplerCount; i++)
+    {
+        FSeek(checkpoint + offsets[i]);
+        SamplerData_t data<name="sampler data">;
+    }
+}
+
+typedef struct PRAMData_s
+{
+   LittleEndian();
+   local int checkpoint = FTell();
+   byte unk;
+   byte unk2;
+   ushort unk3;
+   float unk4;
+/*   Assert(unk2 == 0x50 || unk2 == 0x70);
+   Assert(unk3 == 0xFF);*/
+   
+   uint paramCount;
+   uint unk5;
+   uint paramNameOffset;
+   uint samplerCount;
+   uint samplerDataOffset;
+   uint samplerNameOffset;
+
+   uint paramDataOffsets[paramCount];
+   uint paramNameOffsets[paramCount];
+   uint samplerDataOffsets[samplerCount];
+   uint samplerNameOffsets[samplerCount];
+
+   ParameterData_t parameterData[paramCount]<name="parameter data">;
+   ParameterName_t parameterNames[paramCount]<name="param names",optimize=false>;
+   ReadSamplerData(checkpoint, samplerCount, samplerDataOffsets);
+   FSeek(checkpoint + samplerNameOffsets[0]);
+   SamplerName_t samplerNames[samplerCount]<name="sampler names",optimize=false>;  
+   
+} PRAMData_t<name="PRAM data">;
+
+
+
+
+

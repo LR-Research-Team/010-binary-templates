@@ -1,0 +1,31 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbELB.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Parsing ELB section
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct SocketEntry_s
+{  
+   uint jointNameOffset;
+   uint socketNameOffset;
+   Vector3 offset;
+   Vector3 unk<hidden=true>;
+   
+} SocketEntry_t<name="ELB Data">;
+
+typedef struct ELBData_s
+{  
+   uint entryCount;
+   uint reserved[3];
+   SocketEntry_t sockets[entryCount];
+   Vector3 socketRotation[entryCount]<comment="In radians">;
+   
+} ELBData_t<name="ELB Data">;
+

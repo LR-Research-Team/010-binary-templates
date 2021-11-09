@@ -1,0 +1,75 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbPHB.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Parsing PHB section
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct PHBEntry_s
+{  
+   uint nameOffset<comment="Relative offset">;
+   uint unk;
+   //Assert(unk==0);
+   uint infoBlockOffset<comment="Relative offset">;
+
+} PHBEntry_t<name="PHB Data">;
+
+typedef struct PHBInfoBlock_s
+{  
+   uint unk;
+   uint nameOffset;
+   uint jointNameOffset;
+   uint unk2;
+   Vector3 unk3[3];
+   uint padding[2];
+   Align(16);
+
+} PHBInfoBlock_t<name="PHB Info">;
+
+typedef struct PHBData_s
+{  
+
+   LittleEndian();
+   uint unk[3]<hidden=true>;
+   uint unk1<hidden=true>;
+   uint unk2<hidden=true>;
+   uint unk3<hidden=true>;
+   uint unk4<hidden=true>;
+   uint unk5<hidden=true>;
+   /*Assert(unk[0] + unk[1] + unk[2] == 0)   ;
+   Assert(unk1 == 0xC);
+   Assert(unk2 == 0x1);
+   Assert(unk3 == 0x0);
+   Assert(unk4 == 0x4);
+   Assert(unk5 == 0x2 || unk5 == 0x1);*/
+
+   uint nameOffset;
+
+   uint unk6<hidden=true>;
+   uint unk7<hidden=true>;
+   uint unk8<hidden=true>;
+   uint unk9<hidden=true>;
+   uint unk10<hidden=true>;
+   /*Assert(unk6 == 0x0);
+   Assert(unk7 == 0x101);// || unk7 == 0x201);
+   Assert(unk8 == 0x0);
+   Assert(unk9 == 0x0);
+   Assert(unk10 == 0x10);// || 0x18);*/
+
+   uint entryCount;
+   PHBEntry_t entries[entryCount];
+   uint unk11[2];
+   Align(16);
+   
+   PHBInfoBlock_t infoBlock[entryCount];
+   FSkip(-4);
+   
+   
+} PHBData_t<name="PHB Data">;
+

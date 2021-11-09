@@ -1,0 +1,132 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbSKL.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Parsing SKL section
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct SKLInfo_s
+{
+   LittleEndian();
+   uint totalAfterSection<comment="Awful name but not sure how to call that.Equal to jCount+2 for first, jCount +3 for second.">;
+   uint startOffset;
+   uint endOffset;
+   uint unk;
+   Assert(unk==1);
+} SKLInfo_t<name="SKL Info">;
+
+typedef struct JointName_s
+{
+   string name;
+} JointName_t;
+
+typedef struct SKLJoint_s
+{
+   LittleEndian();
+   uint nameIndex;
+   uint unk;
+   uint unk1;
+   int unk2;
+   Assert(unk==1);
+   Assert(unk1==2);
+   Assert(unk2==-1);
+   Vector3 position<name="Position">;
+   Vector4 rotation<name="Rotation">;
+   Vector3 scale<name="Scale">;
+   int parentIndex;
+   int firstChildIndex;
+   int unk4;
+   int hash<name="Hash">;
+   int unk6;//Check c365 with assertion, seems to be 2 most of the time
+   int groupID<name="Group ID">;
+   //Assert(unk6 == 2); 
+} SKLJoint_t<size=0xB0>;
+
+typedef struct Entry1_s
+{
+    
+}Entry1_t<size=0x50>;
+
+typedef struct Entry2_s
+{
+    uint index;
+    uint type;
+    uint jointIndex<name="jointIndex ?">;
+    uint unk;
+    Assert(unk==0);
+    switch(type)
+    {
+        case 1:
+            Vector4 unk2;
+            uint unk3;
+            Vector3 unk4;
+            break;
+        case 2:
+            Vector4 unk2;
+            Vector3 unk3;
+            uint unk4;
+            break;
+        case 3:
+            uint unk2;
+            uint unk3;
+            float unk4;
+            float unk5;
+            Vector4 unk6;
+            int unk7;
+            float unk8;
+            int unk9;
+            int unk10;
+            uint unk11[4];
+            break;
+    }
+    
+}Entry2_t;
+
+typedef struct Entry3_s
+{
+    
+}Entry3_t<size=0x30>;
+
+typedef struct SKLSection2_s
+{
+   LittleEndian();
+   uint entry1Count;
+   uint entry2Count;
+   uint entry3Count;
+   uint padding;
+   Assert(padding == 0);
+   Entry1_t entry1[entry1Count];
+   Entry2_t entry2[entry2Count]<optimize=false>;
+   Entry3_t entry3[entry3Count];
+} SKLSection2_t;
+
+
+
+typedef struct SKLData_s
+{  
+   LittleEndian();
+   uint SKLInfoCount<comment="Not sure at all">;
+   uint namesOffset;
+   uint namesCount;
+   char skl[4]; 
+   SKLInfo_t sklInfo[SKLInfoCount];
+
+   //Continue parsing
+   local int jCount = sklInfo[0].totalAfterSection -2; //Probably minus skelinfocount instead, need to double check
+   local int jCountTrue = sklInfo[0].endOffset/0xB0;
+   //Printf("%d%d",jCount,jCountTrue);
+   //Assert(jCount == jCountTrue);
+   SKLJoint_t sklJoints[jCountTrue]<optimize=true,name="Joints">;
+   //SKLSection2_t section2;
+   FSkip(sklInfo[1].endOffset);
+
+   //grab names
+   //JointName_t jointNames[namesCount]<optimize=false,name="Joint name">;
+} SKLData_t<name="SKL Data">;
+

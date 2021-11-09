@@ -1,0 +1,87 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbSection.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Various section helpers
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+
+typedef struct sectionHdr_s
+{
+   char SEDBMagic[4]<name="SEDB FourCC">;
+   char resourceMagic[3]<name="Resource FourCC">;
+   byte junk<hidden=true>;
+   int  version<name="Version">;
+   BigEndian(); //probably 2 bytes rather than endian swap
+   ushort resourceID<name="Resource ID">;
+   LittleEndian();
+   ushort resInfoOffset<name="Section start">;
+   int  size<name="Section size">;
+   int reserved[7]<name="Reserved">;
+} sectionHdr_t<name="Section header">;
+
+typedef struct Section01_s
+{
+   byte id;
+   FSkip(3);   
+} Section01_t;
+
+typedef struct Section02Entry_s
+{
+   string entryName;
+   float entryValue;   
+} Section02Entry_t;
+
+typedef struct Section02_s
+{
+   byte id;
+   FSkip(3);
+   uint version;
+   uint entryCount;
+   Section02Entry_t entries[entryCount];   
+} Section02_t;
+
+typedef struct Section08_s
+{
+   byte id;
+   FSkip(3);   
+} Section08_t;
+
+typedef struct resSection_s{
+    sectionHdr_t chdr<hidden=false>;
+    switch(chdr.resourceMagic)
+    {
+        case "wrb":
+            struct chunk_t chunk<name="Chunk">;     
+            break;
+        case "SKL":
+            SKLData_t sklData<name="SKL">;
+            break;
+        case "elb":
+            ELBData_t elbData<name="ELB">;  
+            break;
+       case "shd":
+            struct chunk_t chunk<name="Chunk">;  
+            break;
+        /*case "PHB":
+            PHBData_t phbData<name="PHB">;  
+            break;*/
+        default:
+            break;
+    }
+} resSection_t<name="Resource section",read=GetSectionName>;
+
+string GetSectionName(resSection_t &section) {
+    if (section.chdr.SEDBMagic[0] == 'B')
+        return "BIBF";
+    local string tmp = "aaaaaaa";
+    SPrintf(tmp, "%c%c%c%c%c%c%c", section.chdr.SEDBMagic[0], section.chdr.SEDBMagic[1], section.chdr.SEDBMagic[2], section.chdr.SEDBMagic[3],
+    section.chdr.resourceMagic[0],section.chdr.resourceMagic[1],section.chdr.resourceMagic[2]);
+    return tmp;
+}

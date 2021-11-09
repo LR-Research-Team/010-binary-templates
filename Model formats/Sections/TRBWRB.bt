@@ -1,0 +1,93 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbWRB.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: WRB struct helpers
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct AABBData_s
+{
+    BigEndian();
+    Vector3 BBoxMin;
+    Vector3 BBoxMax;
+} AABBData_t;
+
+typedef struct COMPData_s
+{
+    BigEndian();
+    Vector3 BBoxMin;
+    Vector3 BBoxMax;
+} COMPData_t;
+
+typedef struct ENVData_s
+{
+    BigEndian();
+    ushort jointNameOffset;
+    ushort vCount;
+    ushort vOffset;
+    ushort wOffset;
+    ushort wCount;
+    ushort vOffset2;
+    ushort wOffset2;
+    ushort padding;
+    FSeek(checkpoint + 0x10 + jointNameOffset);
+    string jointName;
+    FSeek(checkpoint + 0x10 + vOffset);
+    uint16 vIndices[vCount];
+    FSeek(checkpoint + 0x10 + wOffset);
+    ubyte weights[wCount];
+} ENVData_t;
+
+typedef enum <uint> STMSVertDataType_s {
+    Uint16 = 0,
+    Float32 = 1,
+    Float16 = 2,
+    UByte = 3,
+    Int16 = 4,
+    SByte = 6
+} STMSVertDataType_t;
+
+typedef enum <ushort> STMSVertSemantic_s {
+    Position = 0x0000,
+    Normal = 0x0002,
+    Color = 0x0003,
+    BiNormal = 0x0004,
+    UV1 = 0x0008,
+    UV2 = 0x0009, 
+    UV3 = 0x000A,
+    UV4 = 0x000B,
+    Tangent = 0x000D,
+    BoneWeight = 0x000E,
+    BoneIndex = 0x000F,
+    Index = 0x00FF
+} STMSVertSemantic_t;
+
+typedef struct STMSSemanticInfo_s
+{
+   int offset;
+   STMSVertDataType_t datatype<name = "datatype">;
+   int count;
+   STMSVertSemantic_t semantic<name = "semantic">;
+   ushort padding;     
+} STMSSemanticInfo_t<name="Semantic info">;
+
+typedef struct STMSData_s
+{
+   BigEndian();
+   short unk<comment="-1 when external ?">;
+   short semanticCount;
+   int entryCount;
+   ushort unk<comment="Increments by 32 for different meshes">;
+   ushort stride;
+   ushort unk2<comment="-1 when external with depb param ?">;
+   byte bIsExternal;
+   byte padding;
+   STMSSemanticInfo_t semanticInfo[semanticCount];
+} STMSData_t<name="STMS Chunk">;
+

@@ -1,0 +1,173 @@
+//------------------------------------------------
+//--- 010 Editor v10.0 Binary Template
+//
+//      File: trbChunk.bt
+//   Authors: Joschka
+//   Version: 0.1
+//   Purpose: Parsing trb files chunks
+//  Category: Game file
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+
+typedef struct chunkHdr_s
+{
+   char magic[4]<name="FourCC">;
+   BigEndian();
+   int version<name="Version">;
+   int size<name="Chunk Size">;
+   int  nextChunkOfs<name="Next chunk offset">;
+   LittleEndian();
+}chunkHdr_t<name="Chunk header">;
+
+typedef struct chunkContainerHdr_s
+{  
+   chunkHdr_t hdr;
+   BigEndian();
+   int subChunkCount<name="Sub chunk count">;
+   int reserved[3]<name="Reserved">;
+   LittleEndian();
+} chunkContainerHdr_t<name="Chunk container header">;
+
+string GetContainerName(chunkContainerHdr_t &hdr) {
+    local string tmp = "aaaa";
+    SPrintf(tmp, "%c%c%c%c", hdr.hdr.magic[0], hdr.hdr.magic[1], hdr.hdr.magic[2], hdr.hdr.magic[3]);
+    return tmp;
+}
+
+string GetChunkName(chunkHdr_t &hdr) {
+    local string tmp = "aaaa";
+    SPrintf(tmp, "%c%c%c%c", hdr.magic[0], hdr.magic[1], hdr.magic[2], hdr.magic[3]);
+    return tmp;
+}
+
+struct chunk_t{
+    chunkHdr_t chunkhdr<hidden=true>;
+    FSeek(FTell() - sizeof(chunkHdr_t));
+    local int checkpoint<hidden=true> = FTell();
+    switch(chunkhdr.magic)
+    {
+        case "WRB":
+        case "MDLC":
+        case "MDL":
+        case "LTCD":
+        case "MICT":
+        case "MINS":
+        case "MESH":
+        case "SHD":
+            chunkContainerHdr_t chunkConthdr<read=GetContainerName>;
+            struct chunk_t chunk[chunkConthdr.subChunkCount]<name="Children chunks",open=true,optimize=false>;          
+            if(chunkConthdr.hdr.nextChunkOfs)
+                FSeek(checkpoint + chunkConthdr.hdr.nextChunkOfs);
+            break;
+        case "FILE":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            FILEData_t filedata;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+
+        case "PCAP":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            Assert(chunkhdr.size == 0x90);
+            PCAPData_t pcapdata;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+        
+        case "VCAP":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            Assert(chunkhdr.size == 0x20);
+            VCAPData_t vcapdata;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+
+        case "PRAM":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            PRAMData_t pramdata;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+            
+        case "ENVD":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            ENVData_t envdata;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+
+        case "COMP":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            COMPData_t compdata;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+
+        case "AABB":            
+            //Check if AABB magic next, if so it's container, otherwise it's an actual chunk
+            FSkip(0x20);
+            char test[4]<hidden=true>;
+            FSkip(-0x24);
+            if (test == "AABB")
+            {
+                chunkContainerHdr_t chunkConthdr<read=GetContainerName>;
+                struct chunk_t chunk[chunkConthdr.subChunkCount]<name="Children chunks",open=true,optimize=false>;          
+            }
+            else
+            {
+                chunkHdr_t chunkhdr<read=GetChunkName>;
+                AABBData_t aabbdata;
+            }
+            if(chunkConthdr.hdr.nextChunkOfs)
+                FSeek(checkpoint + chunkConthdr.hdr.nextChunkOfs);            
+            break;  
+
+        case "HEAD":
+            //Used as header chunks for many things, need to check what's above.
+            FSkip(-0x20);
+            char test[4]<hidden=true>;
+            FSkip(0x1C);
+            if (test == "MESH")
+            {
+                chunkHdr_t chunkhdr<read=GetChunkName>;
+                BigEndian();
+                byte unk;
+                byte PGRPCount;
+                byte STMSCount;
+                byte ENVDCount;
+                int unk2; //MPR/MDR related ?
+                ushort vCount;
+                ushort fCount;
+                int unk3;
+            }
+            else if (test == "MDLC")
+            {
+                chunkHdr_t chunkhdr<read=GetChunkName>;
+            }
+            if(chunkhdr.nextChunkOfs)
+               FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+        
+        case "STMS":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            STMSData_t data;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+
+        case "STR":
+        case "NAME":
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            string value;
+            FSeek(checkpoint + 0x20);
+            break;
+        default:
+            chunkHdr_t chunkhdr<read=GetChunkName>;
+            if(chunkhdr.nextChunkOfs)
+                FSeek(checkpoint + chunkhdr.nextChunkOfs);
+            break;
+    }        
+};
