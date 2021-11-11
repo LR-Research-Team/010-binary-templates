@@ -59,6 +59,8 @@ struct chunk_t{
         case "SHD":
             chunkContainerHdr_t chunkConthdr<read=GetContainerName>;
             struct chunk_t chunk[chunkConthdr.subChunkCount]<name="Children chunks",open=true,optimize=false>;          
+            if(chunkhdr.magic == "SHD")
+                Assert(chunkConthdr.subChunkCount == 0xC);          
             if(chunkConthdr.hdr.nextChunkOfs)
                 FSeek(checkpoint + chunkConthdr.hdr.nextChunkOfs);
             break;
