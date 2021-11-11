@@ -10,5 +10,5 @@ For more information about the different fields, refer to the [Datalog](https://
 
 # Credits
 
--Rich Whitehouse and Nohbdy for the initial TRB/MTB specs.
--The Lightning Returns Research Team
+* Rich Whitehouse, Revelation and Nohbdy for the initial TRB/MTB specs.
+* The Lightning Returns Research Team
