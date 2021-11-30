@@ -14,34 +14,36 @@
 typedef struct AABBData_s
 {
     BigEndian();
-    Vector3 BBoxMin;
-    Vector3 BBoxMax;
-} AABBData_t;
+    Vector3 BBoxMin<name="BBox Min">;
+    Vector3 BBoxMax<name="BBox Max">;
+    uint32 p[2]<name="Padding">;
+} AABBData_t<name="AABB data">;
 
 typedef struct COMPData_s
 {
     BigEndian();
-    Vector3 BBoxMin;
-    Vector3 BBoxMax;
-} COMPData_t;
+    Vector3 BBoxMin<name="BBox Min">;
+    Vector3 BBoxMax<name="BBox Max">;
+    uint32 p[2]<name="Padding">;
+} COMPData_t<name="COMP data">;
 
 typedef struct ENVData_s
 {
     BigEndian();
-    ushort jointNameOffset;
-    ushort vCount;
-    ushort vOffset;
-    ushort wOffset;
-    ushort wCount;
-    ushort vOffset2;
-    ushort wOffset2;
-    ushort padding;
+    ushort jointNameOffset<name="Bone name offset">;
+    ushort vCount<name="Vertex indices count">;
+    ushort vOffset<name="Vertex indices offset">;
+    ushort wOffset<name="Weights offset">;
+    ushort wCount<name="Weight count">;
+    ushort vOffset2<name="Vertex indices offset duplicate">;
+    ushort wOffset2<name="Weights offset duplicate">;
+    ushort padding<name="Padding">;
     FSeek(checkpoint + 0x10 + jointNameOffset);
-    string jointName;
+    string jointName<name="Bone name">;
     FSeek(checkpoint + 0x10 + vOffset);
-    uint16 vIndices[vCount];
+    uint16 vIndices[vCount]<name="Vertex indices">;
     FSeek(checkpoint + 0x10 + wOffset);
-    ubyte weights[wCount];
+    ubyte weights[wCount]<name="Weights">;
 } ENVData_t;
 
 typedef enum <uint> STMSVertDataType_s {
@@ -70,24 +72,24 @@ typedef enum <ushort> STMSVertSemantic_s {
 
 typedef struct STMSSemanticInfo_s
 {
-   int offset;
-   STMSVertDataType_t datatype<name = "datatype">;
-   int count;
-   STMSVertSemantic_t semantic<name = "semantic">;
-   ushort padding;     
+   int offset<name="Offset">;
+   STMSVertDataType_t datatype<name = "Datatype">;
+   int count<name="Count">;
+   STMSVertSemantic_t semantic<name = "Semantic">;
+   ushort padding<name="Padding">;     
 } STMSSemanticInfo_t<name="Semantic info">;
 
 typedef struct STMSData_s
 {
    BigEndian();
-   short unk<comment="-1 when external ?">;
-   short semanticCount;
-   int entryCount;
-   ushort unk<comment="Increments by 32 for different meshes">;
-   ushort stride;
-   ushort unk2<comment="-1 when external with depb param ?">;
-   byte bIsExternal;
-   byte padding;
+   short unk<name="Paired file indicator",comment="-1 when info located in paired file ">;
+   short semanticCount<name="Semantic count">;
+   int entryCount<name="Entry count">;
+   ushort unk1<name="STMS id, see doc">;
+   ushort stride<name="Stride">;
+   ushort unk2<name="Imgb offset, see doc">;
+   byte bIsExternal<name="Data in imgb (bool)">;
+   byte padding<name="Padding">;
    STMSSemanticInfo_t semanticInfo[semanticCount];
 } STMSData_t<name="STMS Chunk">;
 
