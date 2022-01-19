@@ -198,13 +198,13 @@ typedef struct quatValue_s(int length, int tOffset, int flag)
 typedef struct spuTrack_s
 {
     BigEndian();
-    if (version > 0x44)
+    if (version > 0x45)
         int jointHash<name="Joint hash", format=hex>;
     else
         ushort jointID<name="Joint ID">;
     ESemantic semantic;
     ushort packedCount<name="Bitpacked count">;
-    if (version <= 0x44)
+    if (version <= 0x45)
         ushort padding<name="Padding">;
     switch(semantic)
     {
