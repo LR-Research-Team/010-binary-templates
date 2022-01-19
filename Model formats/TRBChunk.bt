@@ -59,8 +59,8 @@ struct chunk_t{
         case "SHD":
             chunkContainerHdr_t chunkConthdr<read=GetContainerName>;
             struct chunk_t chunk[chunkConthdr.subChunkCount]<name="Children chunks",open=true,optimize=false>;          
-            if(chunkhdr.magic == "SHD")
-                Assert(chunkConthdr.subChunkCount == 0xC);          
+            //if(chunkhdr.magic == "SHD")
+              //  Assert(chunkConthdr.subChunkCount == 0xC);          
             if(chunkConthdr.hdr.nextChunkOfs)
                 FSeek(checkpoint + chunkConthdr.hdr.nextChunkOfs);
             break;
@@ -73,7 +73,7 @@ struct chunk_t{
 
         case "PCAP":
             chunkHdr_t chunkhdr<read=GetChunkName>;
-            Assert(chunkhdr.size == 0x90);
+            //Assert(chunkhdr.size == 0x90);
             PCAPData_t pcapdata;
             if(chunkhdr.nextChunkOfs)
                 FSeek(checkpoint + chunkhdr.nextChunkOfs);
@@ -81,7 +81,7 @@ struct chunk_t{
         
         case "VCAP":
             chunkHdr_t chunkhdr<read=GetChunkName>;
-            Assert(chunkhdr.size == 0x20);
+            //Assert(chunkhdr.size == 0x20);
             VCAPData_t vcapdata;
             if(chunkhdr.nextChunkOfs)
                 FSeek(checkpoint + chunkhdr.nextChunkOfs);

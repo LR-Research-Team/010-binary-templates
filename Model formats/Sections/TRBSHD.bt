@@ -35,8 +35,8 @@ typedef struct VCAPData_s
    //Just throwing assertions around to make sure the section is consistent
    LittleEndian();
    uint64 unk[2];
-   Assert(unk[0] == 4095);
-   Assert(unk[1] == 0);
+   //Assert(unk[0] == 4095);
+   //Assert(unk[1] == 0);
     
 } VCAPData_t;
 

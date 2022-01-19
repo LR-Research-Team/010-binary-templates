@@ -198,16 +198,21 @@ typedef struct quatValue_s(int length, int tOffset, int flag)
 typedef struct spuTrack_s
 {
     BigEndian();
-    int jointHash<name="Joint hash", format=hex>;
+    if (version > 0x44)
+        int jointHash<name="Joint hash", format=hex>;
+    else
+        ushort jointID<name="Joint ID">;
     ESemantic semantic;
     ushort packedCount<name="Bitpacked count">;
+    if (version <= 0x44)
+        ushort padding<name="Padding">;
     switch(semantic)
     {
         case QuatCurve:
             local int flag<name="Flag"> = packedCount & 0x80 ? 1 : 0;
             local int count<name="Count"> = packedCount & 0xFF7F;
             ubyte lengths[count]<name = "Track lengths">;
-            FSkip(4 - count);
+            FSkip(4 - count%4);
             local int i<hidden=true> = 0;
             local int j<hidden=true> = 0;
             local int length<hidden=true>;
@@ -255,7 +260,10 @@ typedef struct spuTrack_s
             local int count<name="Count"> = packedCount & 0x7FFF;
             float value<name="Value">;
             break;
-    }
+        default:
+            //Assert(0);
+            break;
+}
 
 
 
@@ -327,7 +335,10 @@ typedef struct spuBinarySection_s(names_t& chunkNames)
 /* Parsing logic */
 struct FILE {
 
-    FSeek(0x40); //Skip the SEDB header
+    FSeek(0x8); //Skip the SEDB header
+    int vers<name="Version">;
+    FSkip(0x34);
+    local int version<hidden=true> = vers;
     uint32 sectionCount<name = "Section count">;
     uint32 sectionOffsets[sectionCount]<name = "Section offsets">;
     //Section names
