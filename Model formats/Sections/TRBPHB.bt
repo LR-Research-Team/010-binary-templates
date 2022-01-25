@@ -11,65 +11,228 @@
 //   History: 
 //------------------------------------------------
 
-typedef struct PHBEntry_s
+
+//------------------------------------------------
+//--- Entry 1
+//------------------------------------------------
+
+//------------------------------------------------
+//--- Entry 2
+//------------------------------------------------
+
+#ifndef TRBUTILS_H
+#include "../Utils/TRBUtils.bt"
+#endif
+
+typedef enum <uint> ShapeType_s {
+    Sphere = 1,
+    Plane = 2,
+} ShapeType_t;
+
+typedef struct PHBEntry2VolSphere_s
 {  
-   uint nameOffset<comment="Relative offset">;
-   uint unk;
-   //Assert(unk==0);
-   uint infoBlockOffset<comment="Relative offset">;
+    ShapeType_t shapeType<name="Shape type">;
 
-} PHBEntry_t<name="PHB Data">;
+    local int localOffs<hidden=true> = FTell();
+    uint shapeNameOffset<name="Shape name offset",comment="Relative offset">;
+    FSeek(localOffs + shapeNameOffset);
+    string shapeName<name="Shape name">;
+    FSeek(localOffs + 4);
 
-typedef struct PHBInfoBlock_s
+    localOffs = FTell();
+    uint jointNameOffset<name="Parent joint name offset",comment="Relative offset">;
+    FSeek(localOffs + jointNameOffset);
+    string jointName<name="Parent joint name">;
+    FSeek(localOffs + 4);
+
+    uint unk0;
+    Assert(unk0 ==0);
+    Vector3 offsetFromJoint<name="Offset from joint">;
+    Vector3 unk1<name="Rotation?">;
+    float radius<name="Radius">;
+    float unk2[4];
+
+} PHBEntry2VolSphere_t<name="Sphere shape">;
+
+typedef struct PHBEntry2VolInfo_s
 {  
-   uint unk;
-   uint nameOffset;
-   uint jointNameOffset;
-   uint unk2;
-   Vector3 unk3[3];
-   uint padding[2];
-   Align(16);
+    local int localOffs<hidden=true> = FTell();
+    uint infoOffset<name="Shape offset">;
+    FSeek(localOffs + infoOffset);
+    uint volumeType<hidden=true>;
+    FSkip(-4);
+    switch(volumeType)
+    {
+        case 1:
+            PHBEntry2VolSphere_t phbSphere;
+            break;
+        default:
+            Assert(0);
+            break;
+    }   
+    FSeek(localOffs + 4);
 
-} PHBInfoBlock_t<name="PHB Info">;
+    localOffs = FTell();
+    uint64 nameOffset<name="Volume name offset",comment="Relative offset">;
+    FSeek(localOffs + nameOffset);
+    string name<name="Volume name">;
+    FSeek(localOffs + 8);
+} PHBEntry2VolInfo_t<name="Volume info">;
+
+typedef struct PHBEntry2_s
+{  
+    uint entryType<name = "PHB Entry type">;
+    uint64 nameSectionOffset<name="name section offset",comment="Relative offset">;
+    uint64 unk0;
+    Assert(unk0 == 0x101);
+    uint unk1;
+    uint unk2;
+    Assert(unk1 + unk2 == 0x10);
+    uint volumeCount<name="Volume count">;
+    local int localOffs<hidden=true> = FTell();
+    uint64 entryNameOffset<name="PHB Entry name offset",comment="Relative offset">;
+    FSeek(localOffs + entryNameOffset);
+    string name<name="PHB Entry name">;
+    FSeek(localOffs + 8);
+    PHBEntry2VolInfo_t VolInfo_t[volumeCount]<optimize=false>;
+    Align(16);
+} PHBEntry2_t<name="PHB Entry 2">;
+
+//------------------------------------------------
+//--- Entry 4
+//------------------------------------------------
+
+typedef struct PHBEntry4SubEntry1_s
+{
+    
+}PHBEntry4SubEntry1_t<name="Subentry 1", size=0x44>;
+
+
+typedef struct PHBEntry4SubEntry1s_s(int count)
+{
+    PHBEntry4SubEntry1_t PHBEntry4SubEntry1[PHBEntry4SubEntry1Count]<optimize=false>;
+}PHBEntry4SubEntry1s_t<name="Subentries 1">;
+
+typedef struct PHBEntry4SubEntry2_s
+{
+    local int temp<hidden=true> = FTell();
+    uint name1Offset<name="Name 1 offset",comment="Relative offset">;
+    FSeek(temp + name1Offset);
+    string name1<name="Name 1">;
+    FSeek(temp + 4);
+    uint unk;
+    uint unk2;
+    uint subentryIndex<name="Subentry index">;
+
+    temp = FTell();
+    uint name2Offset<name="Name 2 offset",comment="Relative offset">;
+    FSeek(temp + name2Offset);
+    string name2<name="Name 2">;
+    FSeek(temp + 4);
+    uint unk3;
+    uint unk4;
+    uint unk5;
+
+}PHBEntry4SubEntry2_t<name="Subentry 2">;
+
+
+typedef struct PHBEntry4SubEntry2s_s(int startOffset, uint count, uint offsets[])
+{
+    local int i<hidden=true> = 0;
+    for(i=0; i< count;i++)
+    {
+        FSeek(startOffset + offsets[i] + 4*i);
+        PHBEntry4SubEntry2_t subentry2<optimize=false>;
+    }
+}PHBEntry4SubEntry2s_t<name="Subentries 2">;
+
+typedef struct PHBEntry4_s
+{  
+    uint entryType<name = "PHB Entry type">;
+
+    local int localOffs<hidden=true> = FTell();
+    uint32 entryNameOffset<name="PHB Entry name offset",comment="Relative offset">;
+    FSeek(localOffs + entryNameOffset);
+    string entryName<name="PHB Entry name">;
+    FSeek(localOffs + 4);
+    
+    localOffs = FTell();
+    uint32 unkNameOffset<name="Unk name offset",comment="See c311.win32.trb in LR for example">;
+    FSeek(localOffs + unkNameOffset);
+    string unkName<name="Unk name">;
+    FSeek(localOffs + 4);
+
+    uint unk[3];
+    Assert(unk[0] + unk[1] + unk[2] == 1);
+
+    localOffs = FTell();
+    uint PHBEntry4SubEntry1Offset<name="Subentry 1 offset">;
+    uint PHBEntry4SubEntry1Count<name="Subentry 1 count">;
+    FSeek(localOffs + PHBEntry4SubEntry1Offset);
+    PHBEntry4SubEntry1s_t PHBEntry4SubEntry1s(PHBEntry4SubEntry1Count);
+    FSeek(localOffs + 8);
+
+    uint unkOffset<name="unk offset">;
+    uint unkCount<name="unk count, always 0 ?">;
+    Assert(unkCount == 0);
+    
+    localOffs = FTell();
+    uint PHBEntry4SubEntry2TableOffset<name="Subentry 2 table offset">;
+    uint PHBEntry4SubEntry2Count<name="Subentry 2 count">;
+    FSeek(localOffs + PHBEntry4SubEntry2TableOffset);
+    local int localOffs2<hidden=true> = FTell();
+    uint PHBEntry4SubEntry2Table[PHBEntry4SubEntry2Count]<name="Subentry 2 offsets">;
+    PHBEntry4SubEntry2s_t PHBEntry4SubEntry2s(localOffs2, PHBEntry4SubEntry1Count, PHBEntry4SubEntry2Table);
+    FSeek(localOffs + 8);
+
+    
+    
+
+} PHBEntry4_t<name="PHB Entry 4", size=0x40>;
+
+//------------------------------------------------
+//--- Main
+//------------------------------------------------
 
 typedef struct PHBData_s
 {  
+    LittleEndian();
+    uint unk0[3];
+    uint entryOffsetsStart<name="Entry offsets start">;
+    uint entryCount<name="PHB Entry count">;
+    uint unk1;
+    local int checkpoint<hidden=true> = FTell();
+    uint entryOffsets[entryCount]<name="PHB Entry offsets">; 
+    Assert(unk0[0] + unk0[1] + unk0[2] + unk1 == 0);
 
-   LittleEndian();
-   uint unk[3]<hidden=true>;
-   uint unk1<hidden=true>;
-   uint unk2<hidden=true>;
-   uint unk3<hidden=true>;
-   uint unk4<hidden=true>;
-   uint unk5<hidden=true>;
-   /*Assert(unk[0] + unk[1] + unk[2] == 0)   ;
-   Assert(unk1 == 0xC);
-   Assert(unk2 == 0x1);
-   Assert(unk3 == 0x0);
-   Assert(unk4 == 0x4);
-   Assert(unk5 == 0x2 || unk5 == 0x1);*/
-
-   uint nameOffset;
-
-   uint unk6<hidden=true>;
-   uint unk7<hidden=true>;
-   uint unk8<hidden=true>;
-   uint unk9<hidden=true>;
-   uint unk10<hidden=true>;
-   /*Assert(unk6 == 0x0);
-   Assert(unk7 == 0x101);// || unk7 == 0x201);
-   Assert(unk8 == 0x0);
-   Assert(unk9 == 0x0);
-   Assert(unk10 == 0x10);// || 0x18);*/
-
-   uint entryCount;
-   PHBEntry_t entries[entryCount];
-   uint unk11[2];
-   Align(16);
-   
-   PHBInfoBlock_t infoBlock[entryCount];
-   FSkip(-4);
-   
-   
+    //parsing all the entries
+    local int i<hidden=true> = 0;
+    for( i = 0; i < entryCount; i++ )
+    {
+        FSeek(entryOffsets[i] + checkpoint + i*4);
+        uint entryType<hidden=true>;
+        FSkip(-4);
+        switch(entryType) 
+        {
+            case 2:
+                PHBEntry2_t entry2;
+                break;            
+            case 4:
+                PHBEntry4_t entry4;
+                break;
+            case 1:
+            case 7:
+                break;
+            default:
+                Assert(0);
+                break;
+            
+        }
+    }   
 } PHBData_t<name="PHB Data">;
 
+#ifndef TRB_H
+#define TRB_H
+FSeek(0x30);
+PHBData_t data;
+#endif

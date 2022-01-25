@@ -10,6 +10,10 @@
 //  ID Bytes: SEDBRES
 //   History: 
 //------------------------------------------------
+
+#ifndef TRB_H
+#define TRB_H
+
 LittleEndian();
 #include "Utils/TRBUtils.bt"
 #include "Sections/TRBPHB.bt"
@@ -102,3 +106,5 @@ struct FILE {
     FSeek(pos + header.fpOffset);
     Filepath_t filepaths[header.fpCount]<name="filepath",optimize=false>;
 } File<name="TRB", open=true>;
+
+#endif

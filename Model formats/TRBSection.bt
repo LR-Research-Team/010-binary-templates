@@ -66,12 +66,12 @@ typedef struct resSection_s{
         case "elb":
             ELBData_t elbData<name="ELB">;  
             break;
-       case "shd":
+        case "shd":
             struct chunk_t chunk<name="Chunk">;  
             break;
-        /*case "PHB":
+        case "PHB":
             PHBData_t phbData<name="PHB">;  
-            break;*/
+            break;
         default:
             break;
     }

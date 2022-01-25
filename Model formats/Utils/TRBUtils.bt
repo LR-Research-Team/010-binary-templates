@@ -11,6 +11,9 @@
 //   History: 
 //------------------------------------------------
 
+#ifndef TRBUTILS_H
+#define TRBUTILS_H
+
 void Align(int n) {
     local int value<hidden=true> = FTell() % n;
 
@@ -31,3 +34,5 @@ typedef struct VECTOR4 {
     float z<name="z">;
     float w<name="w">;
 } Vector4;
+
+#endif

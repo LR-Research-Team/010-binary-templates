@@ -124,7 +124,7 @@ typedef struct SKLData_s
    //Assert(jCount == jCountTrue);
    SKLJoint_t sklJoints[jCountTrue]<optimize=true,name="Joints">;
    //SKLSection2_t section2;
-   FSkip(sklInfo[1].endOffset);
+   //FSkip(sklInfo[1].endOffset);
 
    //grab names
    //JointName_t jointNames[namesCount]<optimize=false,name="Joint name">;
