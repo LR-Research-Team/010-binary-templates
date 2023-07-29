@@ -1,16 +1,17 @@
-//------------------------------------------------
+//----------------------------------------------------
 //--- 010 Editor v12.0.1 Binary Template
 //
 //      File: FFXIII_trilogy_scd.bt
 //   Authors: Surihix
-//   Version: 1.0
+//   Version: 1.2
 //   Purpose: Parse FF13 trilogy's SCD files
 //  Category: FF13 trilogy SCD files
 // File Mask: *.scd
 //  ID Bytes: 53 45 44 42 53 53 43 46
 //   History: 
 //   1.0   2023-07-23 Surihix: Initial version
-//------------------------------------------------
+//   1.2   2023-07-29 Surihx: Updated offset names
+//----------------------------------------------------
 
 struct FILE
 {
@@ -26,7 +27,7 @@ struct FILE
     FSeek(48);
     uint16 unkAchunkCount<name="Number of Unk-A chunks">;
     uint16 unkBchunkCount<name="Number of Unk-B chunks">;
-    uint16 soundStreamCount<name="Number of sound streams">;
+    uint16 soundStreamCount<name="Number of stream info offsets">;
     uint16 soundFolderId<name="Numbered sound folder id">;
     uint32 unkBchunkTableOffset<name="Unk-B Chunk Table start">;
     uint32 infoTableOffset<name="Info Table start">;
@@ -59,9 +60,9 @@ struct FILE
         {
             uint32 infoOffset<name="Info Section offset">;
             FSeek(infoOffset);
-            uint32 streamSize<name="Audio Stream size">;
-            uint32 channelCount<name="Audio Channels">;
-            uint32 sampleRate<name="Audio SampleRate">;
+            uint32 streamSize<name="Audio Stream size (0 = No audio stream)">;
+            uint32 channelCount<name="Audio Channels (1, 2, & 4)">;
+            uint32 sampleRate<name="Audio SampleRate (44000 to 48000 hz)">;
             uint32 formatFlag<name="Audio Format flag (6 = Vorbis & 12 = ADPCM)">;
             uint32 loopStart<name="Audio Loop Start (byte position)">;
             uint32 loopEnd<name="Audio Loop End (byte position)">;
