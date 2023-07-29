@@ -66,10 +66,10 @@ struct FILE
             uint32 formatFlag<name="Audio Format flag (6 = Vorbis & 12 = ADPCM)">;
             uint32 loopStart<name="Audio Loop Start (byte position)">;
             uint32 loopEnd<name="Audio Loop End (byte position)">;
-            uint32 decoderEncoderSize<name="Decoder/Encoder? size">;
+            uint32 decoderEncoderSize<name="Decoder/MetaData/XOR Table size">;
             
             FSeek(infoOffset + 32);
-            char decoderEncoderData[decoderEncoderSize]<name="Decoder/Encoder?">;
+            char decoderEncoderData[decoderEncoderSize]<name="Decoder/MetaData/XOR Table">;
             
             FSeek(infoOffset + 32 + decoderEncoderSize);
             char streamData[streamSize]<name="Audio Stream">;
