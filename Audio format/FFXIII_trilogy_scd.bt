@@ -1,9 +1,9 @@
-//----------------------------------------------------
+//----------------------------------------------------------------------------
 //--- 010 Editor v12.0.1 Binary Template
 //
 //      File: FFXIII_trilogy_scd.bt
 //   Authors: Surihix
-//   Version: 1.2
+//   Version: 1.3
 //   Purpose: Parse FF13 trilogy's SCD files
 //  Category: FF13 trilogy SCD files
 // File Mask: *.scd
@@ -11,7 +11,8 @@
 //   History: 
 //   1.0   2023-07-23 Surihix: Initial version
 //   1.2   2023-07-29 Surihx: Updated offset names
-//----------------------------------------------------
+//   1.3   2023-07-30 Surihix: Added support for 13-2 & LR's XOR'ed header
+//----------------------------------------------------------------------------
 
 struct FILE
 {
@@ -66,12 +67,32 @@ struct FILE
             uint32 formatFlag<name="Audio Format flag (6 = Vorbis & 12 = ADPCM)">;
             uint32 loopStart<name="Audio Loop Start (byte position)">;
             uint32 loopEnd<name="Audio Loop End (byte position)">;
-            uint32 decoderEncoderSize<name="Decoder/MetaData/XOR Table size">;
-            
+            uint32 metaDataEncoderXORSize<name="MetaData/Encoder/XOR chunk size">;
+
             FSeek(infoOffset + 32);
-            char decoderEncoderData[decoderEncoderSize]<name="Decoder/MetaData/XOR Table">;
+            uint16 encryptionFlagCheck<hidden=true>;            
             
-            FSeek(infoOffset + 32 + decoderEncoderSize);
+            if(encryptionFlagCheck == 8194)
+            {
+               FSeek(infoOffset + 32);
+               uint16 encryptionFlag<name="Encryption flag (8194 = valid encryption flag)">;   
+               ubyte unXORmagicNum<name="UnXOR magic number">;
+               
+               FSeek(infoOffset + 48);
+               uint32 oggPageTableSize<name="Ogg page table size">;
+               uint32 vorbisHeaderSize<name="Vorbis header size (also applies for XOR'ed data)">;
+               
+               FSeek(infoOffset + 64);
+               char oggPageTable[oggPageTableSize]<name="Ogg page table">;
+               char vorbisHeader[vorbisHeaderSize]<name="XOR'ed vorbis header">;
+            }
+            else
+            {
+               FSeek(infoOffset + 32);
+               char metaDataEncoderXORData[metaDataEncoderXORSize]<name="MetaData/Encoder/XOR chunk">;
+            }
+                        
+            FSeek(infoOffset + 32 + metaDataEncoderXORSize);
             char streamData[streamSize]<name="Audio Stream">;
             
             infoTableSeek += 4;          
