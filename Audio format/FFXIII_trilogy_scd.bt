@@ -1,9 +1,9 @@
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 //--- 010 Editor v12.0.1 Binary Template
 //
 //      File: FFXIII_trilogy_scd.bt
 //   Authors: Surihix
-//   Version: 1.3
+//   Version: 1.4
 //   Purpose: Parse FF13 trilogy's SCD files
 //  Category: FF13 trilogy SCD files
 // File Mask: *.scd
@@ -12,7 +12,8 @@
 //   1.0   2023-07-23 Surihix: Initial version
 //   1.2   2023-07-29 Surihx: Updated offset names
 //   1.3   2023-07-30 Surihix: Added support for 13-2 & LR's XOR'ed header
-//----------------------------------------------------------------------------
+//   1.4   2023-08-05 Surihix: Added ADPCM Partial Header offsets and minor fixes
+//---------------------------------------------------------------------------------------
 
 struct FILE
 {
@@ -62,38 +63,61 @@ struct FILE
             uint32 infoOffset<name="Info Section offset">;
             FSeek(infoOffset);
             uint32 streamSize<name="Audio Stream size (0 = No audio stream)">;
-            uint32 channelCount<name="Audio Channels (1, 2, & 4)">;
-            uint32 sampleRate<name="Audio SampleRate (44000 to 48000 hz)">;
-            uint32 formatFlag<name="Audio Format flag (6 = Vorbis & 12 = ADPCM)">;
-            uint32 loopStart<name="Audio Loop Start (byte position)">;
-            uint32 loopEnd<name="Audio Loop End (byte position)">;
-            uint32 metaDataEncoderXORSize<name="MetaData/Encoder/XOR chunk size">;
 
-            FSeek(infoOffset + 32);
-            uint16 encryptionFlagCheck<hidden=true>;            
+            if(streamSize != 0)
+            {
+                uint32 channelCount<name="Audio Channels (1, 2, & 4)">;
+                uint32 sampleRate<name="Audio SampleRate (44000 to 48000 hz)">;
+                uint32 formatFlag<name="Audio Format flag (6 = Vorbis & 12 = ADPCM)">;
+                uint32 loopStart<name="Audio Loop Start (byte position)">;
+                uint32 loopEnd<name="Audio Loop End (byte position)">;
+                uint32 partialHeaderXORSize<name="PartialHeader/XOR chunk size">;
+                
+                FSeek(infoOffset + 32);
+                uint16 encryptionFlagCheck<hidden=true>;
             
-            if(encryptionFlagCheck == 8194)
-            {
-               FSeek(infoOffset + 32);
-               uint16 encryptionFlag<name="Encryption flag (8194 = valid encryption flag)">;   
-               ubyte unXORmagicNum<name="UnXOR magic number">;
-               
-               FSeek(infoOffset + 48);
-               uint32 oggPageTableSize<name="Ogg page table size">;
-               uint32 vorbisHeaderSize<name="Vorbis header size (also applies for XOR'ed data)">;
-               
-               FSeek(infoOffset + 64);
-               char oggPageTable[oggPageTableSize]<name="Ogg page table">;
-               char vorbisHeader[vorbisHeaderSize]<name="XOR'ed vorbis header">;
-            }
-            else
-            {
-               FSeek(infoOffset + 32);
-               char metaDataEncoderXORData[metaDataEncoderXORSize]<name="MetaData/Encoder/XOR chunk">;
-            }
+                switch(formatFlag)
+                {
+                    case 6:
+                         if(encryptionFlagCheck == 8194)
+                         {
+                             FSeek(infoOffset + 32);
+                             uint16 encryptionFlag<name="Encryption flag (always 8194)">;   
+                             ubyte unXORmagicNum<name="UnXOR magic number (0 = not XOR'ed)">;
+                             
+                             FSeek(infoOffset + 48);
+                             uint32 oggPageTableSize<name="Ogg page table size">;
+                             uint32 vorbisHeaderSize<name="Vorbis header size (also applies for XOR'ed data)">;
+                             
+                             FSeek(infoOffset + 64);
+                             char oggPageTable[oggPageTableSize]<name="Ogg page table">;
+                             char vorbisHeader[vorbisHeaderSize]<name="XOR'ed vorbis header (not XOR'ed if magic number is 0)">;
+                         }
+                         else
+                         {
+                            FSeek(infoOffset + 32);
+                            char partialHeaderData[partialHeaderXORSize]<name="Vorbis Partial Header chunk">;
+                         }
+                         break;
+                    
+                    case 12:
+                         FSeek(infoOffset + 32);
+                         uint16 formatTag<name="ADPCM tag (always 2)">;
+	                     uint16 channelCount<name="ADPCM Channels">;
+	                     uint32 sampleRate<name="ADPCM SampleRate">;
+	                     uint32 averageBytesPerSample<name="ADPCM Average Bytes Per Sample">;
+	                     uint16 blockAlign<name="ADPCM Block Align">;
+	                     uint16 bitsPerSample<name="ADPCM Bits Per Sample">;
+	                     uint16 cbSize<name="ADPCM cbSize">;
+	                     uint16 samplesPerBlock<name="ADPCM Samples Per Block">;
+	                     uint16 numOfCoef<name="ADPCM number of entries in Coefficients">;
+                         char adpcmCoefs[28]<name="ADPCM Array of Compression Coefficients">;                   
+                         break;
+                }
                         
-            FSeek(infoOffset + 32 + metaDataEncoderXORSize);
-            char streamData[streamSize]<name="Audio Stream">;
+                FSeek(infoOffset + 32 + partialHeaderXORSize);
+                char streamData[streamSize]<name="Audio Stream">;
+            }
             
             infoTableSeek += 4;          
         }InfoTable<name="Audio Stream Info offset">;
