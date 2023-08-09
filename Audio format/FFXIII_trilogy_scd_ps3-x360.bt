@@ -1,0 +1,85 @@
+//-------------------------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: FFXIII_trilogy_scd_ps3-x360.bt
+//   Authors: Surihix
+//   Version: 1.0
+//   Purpose: Parse FF13 trilogy's ps3 & x360 SCD files
+//  Category: FF13 trilogy SCD files
+// File Mask: *.scd
+//  ID Bytes: 53 45 44 42 53 53 43 46
+//   History:
+//   1.0   2023-08-09 Surihix: Initial version
+//-------------------------------------------------------------------
+
+BigEndian();
+
+struct FILE
+{
+    char magic[8]<name="Header">;
+    Assert(magic == "SEDBSSCF");
+
+    uint32 headerVal1<hidden=true>;
+    Assert(headerVal1 == 3);
+
+    FSeek(16);
+    uint64 scdSize<name="SCD Size">;
+
+    FSeek(48);
+    uint16 unkAchunkCount<name="Number of Unk-A chunks">;
+    uint16 unkBchunkCount<name="Number of Unk-B chunks">;
+    uint16 soundStreamCount<name="Number of stream info offsets">;
+    uint16 soundFolderId<name="Numbered sound folder id">;
+    uint32 unkBchunkTableOffset<name="Unk-B Chunk Table start">;
+    uint32 infoTableOffset<name="Info Table start">;
+
+    local uint a = 0;
+    local uint unkAchunkSeek = 80;
+    for(a = 0; a < unkAchunkCount; a++)
+    {
+        FSeek(unkAchunkSeek);
+        struct UNKACHUNK
+        {
+            uint32 unkAChunkStart<name="Chunk A start">;
+            FSeek(unkAChunkStart); 
+            uint32 unkA1<hidden=true>;
+            uint32 unkA2<hidden=true>;
+            float scdVolume<name="SCD Volume">;
+            uint16 scdFileNumber<name="SCD File number (not on WPD archive SCDs)">;
+            uint32 unkA4<hidden=true>;
+            unkAchunkSeek += 4;
+        }unkAchunk<name="UnkA Chunk offset">;
+    }    
+
+
+    local uint i = 0;
+    local uint infoTableSeek = infoTableOffset;    
+    for(i = 0; i < soundStreamCount; i++)
+    {
+        FSeek(infoTableSeek);
+        struct INFOTABLE
+        {
+            uint32 infoOffset<name="Info Section offset">;
+            FSeek(infoOffset);
+            uint32 streamSize<name="Audio Stream size (0 = No audio stream)">;
+
+            if(streamSize != 0)
+            {
+                uint32 channelCount<name="Audio Channels (1, 2, & 4)">;
+                uint32 sampleRate<name="Audio SampleRate">;
+                uint32 formatFlag<name="Audio Format flag (7 = Mp3 & 11 = XMA2)">;
+                uint32 loopStart<name="Audio Loop Start (byte position)">;
+                uint32 loopEnd<name="Audio Loop End (byte position)">;
+                uint32 partialHeaderXORSize<name="Partial Header chunk?? size">;
+                
+                FSeek(infoOffset + 32);
+                char partialHeaderData[partialHeaderXORSize]<name="Partial Header chunk??">;
+                                    
+                FSeek(infoOffset + 32 + partialHeaderXORSize);
+                char streamData[streamSize]<name="Audio Stream">;
+            }
+            
+            infoTableSeek += 4;   
+        }InfoTable<name="Audio Stream Info offset">;
+    }
+}File<open=true, name="FF13 ps3 & x360 SCD">;
