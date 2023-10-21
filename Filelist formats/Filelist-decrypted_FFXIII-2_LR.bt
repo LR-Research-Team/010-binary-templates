@@ -1,0 +1,63 @@
+//---------------------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: Filelist-decrypted_FFXIII-2_LR.bt
+//   Authors: Surihix
+//   Version: 1.2
+//   Purpose: Parse FFXIII-2 and LR's decrypted filelist files
+//  Category: White Image filelist file
+// File Mask: *.bin
+//  ID Bytes: None
+//   History: 
+//   1.0   2023-10-18 Surihix: Initial version
+//   1.2   2023-10-21 Surihix: Changed template filename
+//---------------------------------------------------------------
+
+LittleEndian();
+
+typedef struct CHUNKINFO
+{
+    uint32 uncmpChunkSize<name="Uncompressed chunk size">;
+    uint32 cmpChunkSize<name="Compressed chunk size">;
+    uint chunkStart<name="Chunk Start Offset (relative from Data section)">;
+}ChunkInfoTable;
+
+
+typedef struct ENTRYTABLE
+{
+    uint32 fileCode<name="File Code">;
+    uint16 fileInfoPos<name="Position of file path in the chunk">;
+    ubyte fileInfoPos<name="Chunk number where the file path exists">;
+    ubyte unknown<name="Unknown", hidden=true>;
+}FileEntryTable;
+
+
+struct FILE
+{
+    FSeek(20);    
+    uint32 encTagCheck<hidden=true>;   
+    if(encTagCheck == 501232760)
+    {
+       FSeek(32);
+    }
+    else 
+    {
+       FSeek(0);
+    }
+
+    uint32 chunkInfoStart<name="Chunk Info Section Offset">;
+    uint32 chunkDataStart<name="Chunk Data Section Offset">;
+    uint32 totalFileCount<name="Total Files">;
+
+    struct ENTRIES
+    {
+        FileEntryTable fileEntries[totalFileCount]<name="File Entry", optimize=false>;
+    }FileEntries<name="File Entries">;
+
+    struct CHUNKS
+    {
+        local int chunkCount = (chunkDataStart - chunkInfoStart) / 12;
+        ChunkInfoTable chunkInfoData[chunkCount]<name="Chunk Info", optimize=false>;
+    }FileChunks<name="Chunks Info">;
+          
+}File<open=true, name="FF13-2/LR Filelist">;

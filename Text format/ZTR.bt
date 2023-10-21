@@ -1,0 +1,83 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: ZTR.bt
+//   Authors: Surihix
+//   Version: 1.0
+//   Purpose: Parse FF13 trilogy's ZTR files
+//  Category: ZTR text files
+// File Mask: *.ztr
+//  ID Bytes: 00 00 00 00 00 00 00 01
+//   History: 
+//   1.0   2023-10-23 Surihix: Initial version
+//------------------------------------------------
+
+BigEndian();
+
+typedef struct CHUNKOFFSETS
+{
+    uint chunkOffset;
+}ChunkOffsets;
+
+
+typedef struct LINEINFO
+{
+    ubyte dictChunkNo<name="Dictionary Chunk Number">;
+    ubyte dictIndex<name="Index in Chunk">;
+    uint16 txtStartOffset<name="Line Start Offset">;
+}LineInfo;
+
+
+typedef struct DICTVALUES
+{
+    ubyte index<name="Page index">;
+    ubyte firstVal<name="First item">;
+    ubyte lastVal<name="Second item">;
+}DictValues;
+
+
+typedef struct DICT
+{
+    uint dictSize;
+    local int i = 0;
+    for(i = 0; i < dictSize / 3; i++)
+    {
+        DictValues dictValues<name="Dictionary Values">;
+    }
+}DictChunk;
+
+
+struct ZTR
+{
+	uint64 magic<name="ZTR magic??">;      
+	uint lineCount<name="Number of lines">;        
+	uint idsDecompressedSize<name="Decompressed line-IDs size">;
+	uint chunkCount<name="Number of Dictionary Chunks">;
+
+    local uint currentPos = FTell();
+    FSeek(currentPos + ((chunkCount - 1) * 4));
+    uint lastChunkOffset<hidden=true>;
+    local uint ztrLength = FileSize();
+    local uint firstChunkStart = ztrLength - lastChunkOffset;  
+  
+    FSeek(currentPos);
+    local int co = 0;
+    local uint chunkOffsets[chunkCount];  
+    for (co = 0; co < chunkCount; co++)
+    {        
+        uint chunkOffset<name="Dictionary Chunk Offset">;
+        chunkOffsets[co] = chunkOffset;
+    }
+
+    LineInfo lineInfo[lineCount]<name="Line Info Offsets">;
+    DictChunk dict<name="Dictionary Chunk (Line-IDs)", comment="can have more than one chunk">;
+    
+    FSeek(firstChunkStart);
+    local uint chunkRemaining = chunkCount - 1;
+    local uint c = 0;
+    for (c = 0; c < chunkRemaining; c++)
+    {
+        FSeek(firstChunkStart + chunkOffsets[c]);
+        DictChunk currentChunk<name="Dictionary Chunk">;
+    }
+}Ztr<open=true>;

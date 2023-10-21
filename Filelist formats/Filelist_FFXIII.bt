@@ -1,0 +1,51 @@
+//---------------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: Filelist_FFXIII.bt
+//   Authors: Surihix
+//   Version: 1.2
+//   Purpose: Parse FFXIII-1's filelist files
+//  Category: White Image filelist file
+// File Mask: *.bin
+//  ID Bytes: None
+//   History: 
+//   1.0   2023-06-30 Surihix: Initial version
+//   1.2   2023-10-21 Surihix: Changed template filename
+//---------------------------------------------------------
+
+LittleEndian();
+
+typedef struct CHUNKINFO
+{
+    uint32 uncmpChunkSize<name="Uncompressed chunk size">;
+    uint32 cmpChunkSize<name="Compressed chunk size">;
+    uint chunkStart<name="Chunk Start Offset (relative from Data section)">;
+}ChunkInfoTable;
+
+
+typedef struct ENTRYTABLE
+{
+    uint32 fileCode<name="File Code">;
+    uint16 chunkNo<name="Chunk number where the file path exists">;
+    uint16 fileInfoPos<name="Position of file path in the chunk">;
+}FileEntryTable;
+
+
+struct FILE
+{
+    uint32 chunkInfoStart<name="Chunk Info Section Offset">;
+    uint32 chunkDataStart<name="Chunk Data Section Offset">;
+    uint32 totalFileCount<name="Total Files">;
+
+    struct ENTRIES
+    {
+        FileEntryTable fileEntries[totalFileCount]<name="File Entry", optimize=false>;
+    }FileEntries<name="File Entries">;
+
+    struct CHUNKS
+    {
+        local int chunkCount = (chunkDataStart - chunkInfoStart) / 12;
+        ChunkInfoTable chunkInfoData[chunkCount]<name="Chunk Info", optimize=false>;
+    }FileChunks<name="Chunks Info">;
+          
+}File<open=true, name="FF13-1 Filelist">;
