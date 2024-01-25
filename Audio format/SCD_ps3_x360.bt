@@ -1,17 +1,17 @@
-//-------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 //--- 010 Editor v12.0.1 Binary Template
 //
 //      File: SCD_ps3_x360.bt
 //   Authors: Surihix
-//   Version: 1.2
+//   Version: 1.1
 //   Purpose: Parse FF13 trilogy's ps3 & x360 SCD files
 //  Category: FF13 trilogy SCD files
 // File Mask: *.scd
 //  ID Bytes: 53 45 44 42 53 53 43 46
 //   History:
 //   1.0   2023-08-09 Surihix: Initial version
-//   1.2   2023-10-21 Surihix: Changed template filename
-//-------------------------------------------------------------------
+//   1.1   2024-01-25 Surihix: Changed unk-chunk names and added 'Chunk-B' table
+//---------------------------------------------------------------------------------------
 
 BigEndian();
 
@@ -20,37 +20,60 @@ struct FILE
     char magic[8]<name="Header">;
     Assert(magic == "SEDBSSCF");
 
-    uint32 headerVal1<hidden=true>;
-    Assert(headerVal1 == 3);
+    uint32 unkHeaderVal1<name="Unknown HeaderValue_1">;
+    Assert(unkHeaderVal1 == 3);
 
-    FSeek(16);
+    char unkHeaderVal2[2]<name="Unknown HeaderValues_2">;
+
+    uint16 unkHeaderVal3<name="Unknown HeaderValue_3">;   
     uint64 scdSize<name="SCD Size">;
+    char reserved[24]<name="Reserved, always null">;
 
-    FSeek(48);
-    uint16 unkAchunkCount<name="Number of Unk-A chunks">;
-    uint16 unkBchunkCount<name="Number of Unk-B chunks">;
+    uint16 chunkACount<name="Number of 'Chunk-A' chunks">;
+    uint16 chunkBCount<name="Number of 'Chunk-B' chunks">;
     uint16 soundStreamCount<name="Number of stream info offsets">;
     uint16 soundFolderId<name="Numbered sound folder id">;
-    uint32 unkBchunkTableOffset<name="Unk-B Chunk Table start">;
+    uint32 chunkBtableOffset<name="Chunk-B Table start">;
     uint32 infoTableOffset<name="Info Table start">;
 
     local uint a = 0;
-    local uint unkAchunkSeek = 80;
-    for(a = 0; a < unkAchunkCount; a++)
+    local uint chunkAseek = 80;
+    for(a = 0; a < chunkACount; a++)
     {
-        FSeek(unkAchunkSeek);
-        struct UNKACHUNK
+        FSeek(chunkAseek);
+        struct CHUNKA
         {
-            uint32 unkAChunkStart<name="Chunk A start">;
-            FSeek(unkAChunkStart); 
-            uint32 unkA1<hidden=true>;
-            uint32 unkA2<hidden=true>;
+            uint32 chunkAstart<name="'Chunk-A' start">;
+            FSeek(chunkAstart);
+             
+            char chunkA_unk1[4]<name="UnknownValues_1">;
+            uint32 chunkA_unk2<name="UnknownValue_2">;
             float scdVolume<name="SCD Volume">;
-            uint16 scdFileNumber<name="SCD File number (not on WPD archive SCDs)">;
-            uint32 unkA4<hidden=true>;
-            unkAchunkSeek += 4;
-        }unkAchunk<name="UnkA Chunk offset">;
+            uint16 scdFileNumber<name="SCD File number", comment="not present on WPD archive SCDs">;
+            uint16 chunkA_unk3<name="UnknownValue_3">;
+			
+            chunkAseek += 4;
+        }chunkA<name="'Chunk-A'">;
     }    
+
+    local uint b = 0;
+    local uint chunkBseek = chunkBtableOffset;
+    for(b = 0; b < chunkBCount; b++)
+    {
+        FSeek(chunkBseek);
+        struct CHUNKB
+        {
+            uint32 chunkBstart<name="'Chunk-B' start">;
+            FSeek(chunkBstart);
+            
+            uint16 chunkB_unk1<name="uint16_UnknownValue_1">;
+            uint16 chunkB_unk2<name="uint16_UnknownValue_2">;
+            uint16 chunkB_unk3<name="uint16_UnknownValue_3">;
+            uint16 chunkB_unk4<name="uint16_UnknownValue_4">;
+         
+            chunkBseek += 4;
+        }chunkB<name="'Chunk-B'">;
+    }
 
 
     local uint i = 0;
