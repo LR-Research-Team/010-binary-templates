@@ -1,18 +1,20 @@
-//------------------------------------------------
+//----------------------------------------------------------
 //--- 010 Editor v12.0.1 Binary Template
 //
 //      File: ZTR.bt
 //   Authors: Surihix
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse FF13 trilogy's ZTR files
 //  Category: ZTR text files
 // File Mask: *.ztr
 //  ID Bytes: 00 00 00 00 00 00 00 01
 //   History: 
 //   1.0   2023-10-23 Surihix: Initial version
-//------------------------------------------------
+//   1.1   2024-01-26 Surihix: Page position value update
+//----------------------------------------------------------
 
 BigEndian();
+
 
 typedef struct CHUNKOFFSETS
 {
@@ -23,7 +25,7 @@ typedef struct CHUNKOFFSETS
 typedef struct LINEINFO
 {
     ubyte dictChunkNo<name="Dictionary Chunk Number">;
-    ubyte dictIndex<name="Index in Chunk">;
+    ubyte dictPagePosition<name="Position in dictionary chunk's page">;
     uint16 txtStartOffset<name="Line Start Offset">;
 }LineInfo;
 
