@@ -3,7 +3,7 @@
 //
 //      File: SCD_win32.bt
 //   Authors: Surihix
-//   Version: 1.6
+//   Version: 1.7
 //   Purpose: Parse FF13 trilogy's SCD files
 //  Category: FF13 trilogy SCD files
 // File Mask: *.scd
@@ -15,200 +15,239 @@
 //   1.4   2023-08-05 Surihix: Added ADPCM Partial Header offsets and minor fixes
 //   1.5   2023-08-09 Surihix: Updated data types for few variables
 //   1.6   2024-01-25 Surihix: Updated few offsets and discovered new chunk tables
+//   1.7   2024-12-17 Surihix: Rearranged structs and added colors
 //---------------------------------------------------------------------------------------
 
 LittleEndian();
 
-struct FILE
+typedef struct HEADER
 {
-    char magic[8]<name="Header">;
+    char magic[8]<name="Header Magic", comment="Section Data Binary Sound Source Container File", bgcolor=cDkGreen>;
     Assert(magic == "SEDBSSCF");
 
-    uint32 unkHeaderVal1<name="Unknown HeaderValue_1">;
-    Assert(unkHeaderVal1 == 3);
-    
-    char unkHeaderVal2[2]<name="Unknown HeaderValues_2">;
-    
-    uint16 unkHeaderVal3<name="Unknown HeaderValue_3">;    
+    uint32 version<name="Version", comment="Always 3", bgcolor=cDkGreen>;
+    Assert(version == 3);
 
-    uint64 scdSize<name="SCD Size">;
-
-    char reserved[24]<name="Reserved, always null">;
-
-    uint16 chunkAcount<name="Number of 'A' chunks">;
-    uint16 chunkBcount<name="Number of 'B' chunks">;
-    uint16 streamInfoCount<name="Number of 'Stream-info' chunks">;
-    uint16 soundFolderId<name="Numbered sound folder id">;
-
-    uint32 chunkBtableOffset<name="'Chunk-B' table offset">;
-    uint32 streamInfoTableOffset<name="'Stream-info' table offset">;
-    uint32 chunkCtableOffset<name="'Chunk-C' table offset">;
-
-    char reserved2[4]<name="Reserved, always null">;
-
-    uint32 chunkDtableOffset<name="'Chunk-D' table offset">;
-    uint16 scdFileNumberMulti<name="SCD File number", comment="sometimes present when there are multiple streams">;
+    ubyte unkFlag<bgcolor=cRed>;
+    ubyte unkFlag2<bgcolor=cRed>;
+    uint16 unkVal<bgcolor=cRed>;
+    uint64 fileSize<name="Total file size", bgcolor=cDkGreen>;
+    ubyte reserved[24]<bgcolor=cBlack>;
+    uint16 chunkACount<name="'Chunk-A' chunks count", bgcolor=cDkGreen>;
+    uint16 chunkBCount<name="'Chunk-B' chunks count", bgcolor=cDkGreen>;
+    uint16 streamInfoChunkCount<name="'Stream-info' chunks count", bgcolor=cDkGreen>;
+    uint16 soundFolderId<name="Numbered sound folder id", bgcolor=cDkGreen>;
+    uint32 chunkBtableOffset<name="'Chunk-B' offset-table position", bgcolor=cDkGreen>;
+    uint32 streamInfoTableOffset<name="'Stream-info' offset-table position", bgcolor=cDkGreen>;
+    uint32 chunkCtableOffset<name="'Chunk-C' offset-table position", bgcolor=cDkGreen>;
+    ubyte reserved2[4]<bgcolor=cBlack>;
+    uint32 chunkDtableOffset<name="'Chunk-D' offset-table position", bgcolor=cDkGreen>;
+    uint16 scdfileIdMultiStreamOnly<name="SCD File Id (Multiple-Streams only)", comment="sometimes present if there are multiple streams", bgcolor=cDkGreen>;
+    ubyte reserved3[2]<bgcolor=cBlack>;
+}Header;
 
 
-    local uint a = 0;
-    local uint chunkAseek = 80;
-    for(a = 0; a < chunkAcount; a++)
+typedef struct CHUNKA
+{
+    uint32 chunkAOffset<bgcolor=cDkGreen>;
+    local int64 nextPositionInTable = FTell();
+    FSeek(chunkAOffset);
+     
+    ubyte unkFlag<bgcolor=cRed>;
+    ubyte unkFlag1<bgcolor=cRed>;
+    ubyte unkFlag2<bgcolor=cRed>;
+    ubyte switchingTracksFlag<name="Switching Tracks Flag", comment="1 = Normal-track & 11 = SwitchingType-tracks (XIII-2/LR)", bgcolor=cDkGreen>;
+    uint32 unkVal<bgcolor=cRed>;
+    float scdVolume<name="SCD Stream Volume", comment="if there are multiple streams, then this would control the volume of a single stream", bgcolor=cDkGreen>;
+    uint16 scdStreamFileId<name="SCD Stream/File Id", comment="if multiple streams treat as 'Stream Id', else treat as 'File Id'", bgcolor=cDkGreen>;
+    ubyte reserved[2]<bgcolor=cBlack>;
+    uint16 chunkId<bgcolor=cDkYellow, comment="possibly the Chunk Id, doubtful">;
+    uint16 unkVal2<bgcolor=cRed>;
+    FSeek(nextPositionInTable);
+}ChunkA;
+
+
+typedef struct CHUNKB
+{
+    uint32 chunkBOffset<bgcolor=cDkGreen>;
+    local int64 nextPositionInTable = FTell();
+    FSeek(chunkBOffset);
+
+    uint16 unkVal<bgcolor=cRed>;
+    uint16 unkVal2<bgcolor=cRed>;
+
+    FSeek(nextPositionInTable);
+}ChunkB;
+
+
+typedef struct ENCRYPTEDVORBISHEADER
+{
+    ubyte unXORmagicNum<name="UnXOR magic number", comment="0 = not XOR'ed", bgcolor=cDkGreen>;
+    ubyte reserved[5]<bgcolor=cBlack>;
+    uint32 unkVal<bgcolor=cRed>;
+    float unkVal2<bgcolor=cRed>;
+    uint32 oggPageTableSize<name="Ogg page table size", bgcolor=cDkGreen>;
+    uint32 vorbisHeaderSize<name="Vorbis header size", comment="also applies for XOR'ed data", bgcolor=cDkGreen>;   
+    ubyte reserved2[8]<bgcolor=cBlack>;
+    ubyte oggPageTable[oggPageTableSize]<name="Ogg page table", bgcolor=cDkGreen>;
+    ubyte vorbisHeader[vorbisHeaderSize]<name="XOR'ed vorbis header", comment="not XOR'ed if magic number is 0", bgcolor=cDkGreen>;
+}EncryptedVorbisHeader;
+
+
+typedef struct PARTIALADPCMHEADER
+{
+    uint16 formatTag<name="ADPCM tag (always 2)", bgcolor=cDkGreen>;
+	uint16 channelCount<name="ADPCM Channels", bgcolor=cDkGreen>;
+	uint32 sampleRate<name="ADPCM SampleRate", bgcolor=cDkGreen>;
+	uint32 averageBytesPerSample<name="ADPCM Average Bytes Per Sample", bgcolor=cDkGreen>;
+	uint16 blockAlign<name="ADPCM Block Align", bgcolor=cDkGreen>;
+	uint16 bitsPerSample<name="ADPCM Bits Per Sample", bgcolor=cDkGreen>;
+	uint16 cbSize<name="ADPCM cbSize", bgcolor=cDkGreen>;
+	uint16 samplesPerBlock<name="ADPCM Samples Per Block", bgcolor=cDkGreen>;
+	uint16 numOfCoef<name="ADPCM number of entries in Coefficients", bgcolor=cDkGreen>;
+    ubyte adpcmCoefs[28]<name="ADPCM Array of Compression Coefficients", bgcolor=cDkGreen>;  
+}PartialAdpcmHeader;
+
+
+typedef struct STREAMINFO
+{
+    uint32 streamInfoOffset<bgcolor=cDkGreen>;
+    local int64 nextPositionInTable = FTell();
+    FSeek(streamInfoOffset);
+
+    uint32 streamSize<name="Audio Stream size", comment="0 = No audio stream", bgcolor=cDkGreen>;
+
+    if(streamSize != 0) 
     {
-        FSeek(chunkAseek);
-        struct CHUNKA
-        {
-            uint32 chunkAstart<name="'Chunk-A' start">;
-            FSeek(chunkAstart);
-             
-            char chunkA_unk1[3]<name="UnknownValues_1">;
-
-            ubyte switchingTracksFlag<name="Switching Tracks Flag", comment="1 = Normal-track & 11 = SwitchingType-tracks">;
-
-            uint32 chunkA_unk2<name="UnknownValue_2">;
-
-            float scdVolume<name="SCD Volume">;
-
-            uint16 scdFileNumber<name="SCD File number", comment="sometimes not present if there are multiple streams">;
-            uint16 chunkA_unk3<name="UnknownValue_3">;
-			
-            chunkAseek += 4;
-
-        }chunkA<name="'Chunk-A'">;
-    }
-
-
-    local uint b = 0;
-    local uint chunkBseek = chunkBtableOffset;
-    for(b = 0; b < chunkBcount; b++)
-    {
-        FSeek(chunkBseek);
-        struct CHUNKB
-        {
-            uint32 chunkBstart<name="'Chunk-B' start">;
-
-            FSeek(chunkBstart);            
-            uint16 chunkB_unk1<name="uint16_UnknownValue_1">;
-         
-            chunkBseek += 4;
-
-        }chunkB<name="'Chunk-B'">;
-    }     
-
-
-    local uint s = 0;
-    local uint streamInfoSeek = streamInfoTableOffset;    
-    for(s = 0; s < streamInfoCount; s++)
-    {
-        FSeek(streamInfoSeek);
-        struct STREAMINFO
-        {
-            uint32 streamInfoStart<name="'Stream-info' start">;
-
-            FSeek(streamInfoStart);
-            uint32 streamSize<name="Audio Stream size", comment="0 = No audio stream">;
-
-            if(streamSize != 0)
-            {
-                uint32 channelCount<name="Audio Channels ", comment="can be 1, 2, & 4">;
-                uint32 sampleRate<name="Audio SampleRate">;
-                uint32 formatFlag<name="Audio Format flag", comment="6 = Vorbis & 12 = ADPCM">;
-                uint32 loopStart<name="Audio Loop Start (byte position)">;
-                uint32 loopEnd<name="Audio Loop End (byte position)">;
-                uint32 partialHeaderXORSize<name="PartialHeader/XOR chunk size">;
+       uint32 channelCount<name="Audio Channels ", comment="can be 1, 2, & 4", bgcolor=cDkGreen>;
+       uint32 sampleRate<name="Audio SampleRate", bgcolor=cDkGreen>;
+       uint32 formatFlag<name="Audio Format flag", comment="6 = Vorbis & 12 = ADPCM", bgcolor=cDkGreen>;
+       uint32 loopStart<name="Audio Loop Start (byte position)", bgcolor=cDkGreen>;
+       uint32 loopEnd<name="Audio Loop End (byte position)", bgcolor=cDkGreen>;
+       uint32 partialHeaderSize<name="PartialHeader/XOR chunk size", bgcolor=cDkGreen>;
+       ubyte reserved[4]<bgcolor=cBlack>;
+       local int64 infoSectionEnd = FTell();
+       
+       switch(formatFlag) 
+       {
+           case 6:
+                uint16 encVorbisHeaderFlag<comment="if 8194, use 'EncryptedVorbisHeader' struct. actual purpose is unknown", bgcolor=cDkYellow>;
                 
-                FSeek(streamInfoStart + 32);
-                uint16 encryptionFlagCheck<hidden=true>;
-            
-                switch(formatFlag)
+                if(encVorbisHeaderFlag == 8194)
                 {
-                    case 6:
-                         if(encryptionFlagCheck == 8194)
-                         {
-                             FSeek(streamInfoStart + 32);
-                             uint16 encryptionFlag<name="Encryption flag", comment="always 8194">;   
-                             ubyte unXORmagicNum<name="UnXOR magic number", comment="0 = not XOR'ed">;
-                             
-                             FSeek(streamInfoStart + 48);
-                             uint32 oggPageTableSize<name="Ogg page table size">;
-                             uint32 vorbisHeaderSize<name="Vorbis header size", comment="also applies for XOR'ed data">;
-                             
-                             FSeek(streamInfoStart + 64);
-                             char oggPageTable[oggPageTableSize]<name="Ogg page table">;
-                             char vorbisHeader[vorbisHeaderSize]<name="XOR'ed vorbis header", comment="not XOR'ed if magic number is 0">;
-                         }
-                         else
-                         {
-                            FSeek(streamInfoStart + 32);
-                            char partialHeaderData[partialHeaderXORSize]<name="Vorbis Partial Header chunk">;
-                         }
-                         break;
-                    
-                    case 12:
-                         FSeek(streamInfoStart + 32);
-                         uint16 formatTag<name="ADPCM tag (always 2)">;
-	                     uint16 channelCount<name="ADPCM Channels">;
-
-	                     uint32 sampleRate<name="ADPCM SampleRate">;
-	                     uint32 averageBytesPerSample<name="ADPCM Average Bytes Per Sample">;
-
-	                     uint16 blockAlign<name="ADPCM Block Align">;
-	                     uint16 bitsPerSample<name="ADPCM Bits Per Sample">;
-	                     uint16 cbSize<name="ADPCM cbSize">;
-	                     uint16 samplesPerBlock<name="ADPCM Samples Per Block">;
-	                     uint16 numOfCoef<name="ADPCM number of entries in Coefficients">;
-
-                         char adpcmCoefs[28]<name="ADPCM Array of Compression Coefficients">;                   
-                         break;
+                  EncryptedVorbisHeader encryptedVorbisHeader<name="Encrypted Vorbis-Header", optimize=false>;
                 }
-                        
-                FSeek(streamInfoStart + 32 + partialHeaderXORSize);
-                char streamData[streamSize]<name="Audio Stream">;
-            }
-            
-            streamInfoSeek += 4;    
-      
-        }StreamInfo<name="'Stream-info'">;
+                else 
+                {
+                  FSeek(FTell() - 4);
+                  ubyte partialVorbisHeader[partialHeaderSize]<name="Partial Vorbis-Header", optimize=false, bgcolor=cDkGreen>;
+                }
+                break;
+
+           case 12:
+                PartialAdpcmHeader partialAdpcmHeader<name="Partial ADPCM Header", optimize=false>;
+                break;
+       }
+
+       FSeek(infoSectionEnd + partialHeaderSize);
+       ubyte streamData[streamSize]<name="Audio Stream", bgcolor=cDkGreen>;
     }
+    
+    FSeek(nextPositionInTable);
+}StreamInfo;
 
 
-    local uint chunkCseek = chunkCtableOffset;
-    local uint readValHolder = 255;
+uint32 FindChunks()
+{
+    local uint32 chunkCount = 0;
 
-    while(readValHolder != 0)
+    while(true)
     {
-        FSeek(chunkCseek);
-        uint32 testStartValue<hidden=true>;
-        readValHolder = testStartValue;
-
-        if(readValHolder != 0)
-        {
-            struct CHUNKC
-            {
-                FSeek(chunkCseek);
-                uint32 chunkCstart<name="'Chunk-C' start">;
-            
-                FSeek(chunkCstart); 
-                uint16 chunkC_unk1<name="uint16_UnknownValue_1">;
-            
-                chunkCseek += 4;  
-            
-            }chunkC<name="'Chunk-C'">;
-        }      
-    }
-
-
-    typedef struct CHUNKD
-    {
-        uint32 chunkDstart<name="'Chunk-D' start">;
-
-        FSeek(chunkDstart);            
-        uint16 chunkD_unk1<name="uint16_UnknownValue_1">;
+         uint32 offsetVal<hidden=true>;
          
-    }ChunkD<name="'Chunk-D'">;
+         if (offsetVal == 0)
+         {
+            break;
+         }
+         else 
+         {
+            chunkCount++;
+         }
+    }
+
+    return chunkCount;
+}
 
 
-    FSeek(chunkDtableOffset);
-    ChunkD chunkDoffsets<name="'Chunk-D'">;
+typedef struct CHUNKC
+{
+    uint32 chunkCOffset<bgcolor=cDkGreen>;
+    local int64 nextPositionInTable = FTell();
+    FSeek(chunkCOffset);    
 
+    uint16 chunkSize<bgcolor=cDkGreen>;
+    ubyte unkData[chunkSize - 2]<comment="includes the chunkSize offset", bgcolor=cRed>;
+
+    FSeek(nextPositionInTable);
+}ChunkC;
+
+
+typedef struct CHUNKD
+{
+    uint32 chunkDOffset<bgcolor=cDkGreen>;
+    local int64 nextPositionInTable = FTell();
+    FSeek(chunkDOffset);
+
+    uint16 unkVal<bgcolor=cRed>; 
+
+    FSeek(nextPositionInTable);
+}ChunkD;
+
+
+struct FILE
+{
+    Header header<name="Header", optimize=false, open=true>;
+
+    
+    struct CHUNKACHUNKS
+    {
+        ChunkA chunkA[header.chunkACount]<name="Chunk-A", optimize=false>;
+    }ChunkAChunks<name="'Chunk-A' chunks", open=false>;
+
+
+    struct CHUNKBCHUNKS
+    {
+        FSeek(header.chunkBtableOffset);
+        ChunkB chunkB[header.chunkBCount]<name="Chunk-B", optimize=false>;
+    }ChunkBChunks<name="'Chunk-B' chunks", open=false>;
+
+   
+    struct STREAMINFOCHUNKS
+    {
+        FSeek(header.streamInfoTableOffset);
+        StreamInfo streamInfo[header.streamInfoChunkCount]<name="Stream-info", optimize=false>;
+    }StreamInfoChunks<name="'Stream-info' chunks", open=false>;
+
+   
+    struct CHUNKCCHUNKS
+    {     
+        FSeek(header.chunkCtableOffset);
+        local uint32 chunkCCount = FindChunks();
+        Printf("Computed 'Chunk-C' chunks: %d\n", chunkCCount);  
+
+        FSeek(header.chunkCtableOffset);
+        ChunkC chunkC[chunkCCount]<name="Chunk-C", optimize=false>;
+    }ChunkCChunks<name="'Chunk-C' chunks", open=false>;
+
+
+    struct CHUNKDCHUNKS
+    {
+        FSeek(header.chunkDtableOffset);
+        local uint32 chunkDCount = FindChunks();
+        Printf("Computed 'Chunk-D' chunks: %d\n", chunkDCount); 
+
+        FSeek(header.chunkDtableOffset);
+        ChunkD chunkD[chunkDCount]<name="Chunk-D", optimize=false>;
+    }ChunkDChunks<name="'Chunk-D' chunks", open=false>;
 
 }File<open=true, name="FF13 SCD">;
