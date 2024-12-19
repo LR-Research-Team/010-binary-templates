@@ -3,7 +3,7 @@
 //
 //      File: SCD_win32.bt
 //   Authors: Surihix
-//   Version: 1.7
+//   Version: 1.8
 //   Purpose: Parse FF13 trilogy's SCD files
 //  Category: FF13 trilogy SCD files
 // File Mask: *.scd
@@ -16,6 +16,7 @@
 //   1.5   2023-08-09 Surihix: Updated data types for few variables
 //   1.6   2024-01-25 Surihix: Updated few offsets and discovered new chunk tables
 //   1.7   2024-12-17 Surihix: Rearranged structs and added colors
+//   1.8   2024-12-20 Surihix: Updated partial header chunk start offset
 //---------------------------------------------------------------------------------------
 
 LittleEndian();
@@ -139,7 +140,7 @@ typedef struct STREAMINFO
                 }
                 else 
                 {
-                  FSeek(FTell() - 4);
+                  FSeek(FTell() - 2);
                   ubyte partialVorbisHeader[partialHeaderSize]<name="Partial Vorbis-Header", optimize=false, bgcolor=cDkGreen>;
                 }
                 break;
