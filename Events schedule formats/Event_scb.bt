@@ -1,0 +1,643 @@
+//------------------------------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: Event_scb.bt
+//   Authors: Surihix
+//   Version: 1.0
+//   Purpose: Parse scb files that are packed inside .xwb files
+//  Category: 
+// File Mask: *.scb
+//  ID Bytes: SEDBSCB
+//   History: 
+//   1.0   2024-12-31 Surihix: Initial version
+//------------------------------------------------------------------------
+
+LittleEndian();
+
+typedef struct HEADER
+{
+    char magic[8]<comment="Section Data Binary Schedule Binary", bgcolor=cDkGreen>;
+    Assert(magic == "SEDBSCB");
+
+    uint version<bgcolor=cDkGreen>;
+    ubyte unk[2]<bgcolor=cRed>;
+    uint16 headerSize<bgcolor=cDkGreen>;
+    uint64 fileSize<bgcolor=cDkGreen>;
+    uint32 reserved[6]<bgcolor=cBlack>;
+}Header;
+
+
+// Shared structs
+typedef struct STRINGDYNAMIC
+{
+    string stringData;
+}StringDynamic<name="string dynamic value", read=this.stringData>;
+
+
+local int fixSize = 0;
+typedef struct STRINGFIXED
+{
+    char stringData[fixSize];
+}StringFixed<name="string fixed value", read=this.stringData>;
+
+
+// Shared function
+int AdjustPostion()
+{
+    local int64 currentPos = FTell();
+    local int posAdjust = 0;
+    if (currentPos % 16 != 0)
+    {
+       posAdjust = 16 - (currentPos % 16);
+    }
+
+    return posAdjust;
+}
+
+// CRST Chunk
+typedef struct CRST
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<comment="Cinema Resource Table", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CRST");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk2[2]<bgcolor=cRed>;
+    uint16 cresChunksCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    uint32 cresOffsets[cresChunksCount]<name="@CRES Chunk Offsets", bgcolor=cDkGreen>;
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CRSTChunk;
+
+
+// schedul SubChunk set
+typedef struct CATT
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<comment="Cinema Actor Table??", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CATT");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk2[2]<bgcolor=cRed>;
+    uint16 chunkFieldsCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    
+    if (chunkFieldsCount != 0)
+    {
+       uint32 cattFields[chunkFieldsCount]<name="@CATT SubChunk Fields", bgcolor=cRed>;
+    }
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CATTSubChunk;
+
+
+typedef struct CCPT
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CCPT");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk2[2]<bgcolor=cRed>;
+    uint16 chunkFieldsCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+
+    if (chunkFieldsCount != 0)
+    {
+       uint32 ccptOffsets[chunkFieldsCount]<name="@CCPT SubChunk Fields", bgcolor=cRed>;
+    }
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CCPTSubChunk;
+
+
+typedef struct CACTITEM
+{   
+    uint16 itemSize<comment="including this offset", bgcolor=cDkGreen>;
+    ubyte reserved<bgcolor=cBlack>;
+    ubyte itemIndex<bgcolor=cDkGreen>;
+    ubyte itemData[itemSize - 4]<bgcolor=cRed>;
+}CACTItem;
+
+
+typedef struct CACT
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<comment="Cinema Actor??", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CACT");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk2[2]<bgcolor=cRed>;
+    uint16 chunkItemsCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+
+    if (chunkItemsCount != 0)
+    {
+       CACTItem cactItems[chunkItemsCount]<name="@CACT Item", optimize=false>;
+    }
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CACTSubChunk;
+
+
+typedef struct DPKTITEM
+{
+    uint32 itemSize<comment="including this offset", bgcolor=cDkGreen>;
+    ubyte itemData[itemSize - 4]<bgcolor=cRed>;
+}DPKTItem;
+
+
+typedef struct DPKT
+{
+    char chunkMagic[6]<bgcolor=cDkGreen>;
+    Assert(chunkMagic == "DPKT");
+
+    uint16 unk<bgcolor=cRed>;
+    uint32 chunkSize<bgcolor=cDkGreen>;
+    uint16 chunkItemsCount<bgcolor=cDkGreen>;
+    ubyte reserved[2]<bgcolor=cBlack>;
+    
+    if (chunkItemsCount != 0)
+    {
+       DPKTItem dpktItem[chunkItemsCount]<name="DPKT Item", optimize=false>;
+    }
+}DPKTSubChunk;
+
+
+typedef struct CDPT
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CDPT");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+
+    DPKTSubChunk dpktSubChunk<name="DPKT SubChunk", optimize=false>;
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CDPTSubChunk;
+
+
+typedef struct CTRK
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<comment="Cinema Track??", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CTRK");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk[4]<bgcolor=cRed>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte unkData[currentChunkSize - currentPos]<bgcolor=cRed>;
+    }
+}CTRKSubChunk;
+
+
+typedef struct CBLKITEM
+{
+    uint16 itemSize<comment="including this offset", bgcolor=cDkGreen>;
+    ubyte itemData[itemSize - 2]<bgcolor=cRed>;
+}CBLKItem;
+
+typedef struct CBLK
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<comment="Cinema Block", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CBLK");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+
+    char blockName[16]<comment="in shift-jis", bgcolor=cDkGreen>;
+    ubyte reserved2[4]<bgcolor=cBlack>;
+    
+    uint32 someSortOfHash<bgcolor=cDkYellow>;
+    uint16 blockItemsCount<bgcolor=cDkGreen>;    
+    ubyte reserved3[22]<bgcolor=cBlack>;
+
+    if (blockItemsCount != 0)
+    {
+       CBLKItem cblkItem[blockItemsCount]<name="Block Item", optimize=false>;
+    }
+     
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<name="remaining data", comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CBLKSubChunk;
+
+
+typedef struct CBKT
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<comment="Cinema Block Table", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CBKT");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk[2]<bgcolor=cRed>;
+    uint16 chunkItemsCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+
+    if (chunkItemsCount != 0)
+    {
+       CBLKSubChunk cblkSubChunk[chunkItemsCount]<name="@CBLK SubChunk", optimize=false>;
+    }
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos];
+    }
+}CBKTSubChunk;
+
+
+typedef struct CBIS
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CBIS");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte unkData[currentChunkSize - currentPos]<bgcolor=cRed>;
+    }
+}CBISSubChunk;
+
+
+typedef struct CCNT
+{
+    local uint32 chunkStart = FTell();
+
+    char chunkMagic[6]<bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CCNT");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk", bgcolor=cDkGreen>;
+    ubyte unk[2]<bgcolor=cRed>;
+    uint16 chunkItemsCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+
+    if (chunkItemsCount != 0)
+    {
+       CBISSubChunk cbisSubChunk[chunkItemsCount]<name="@CBIS SubChunk", optimize=false>;
+    }
+
+    local uint currentChunkSize = rowCount * 16;
+    local uint currentPos = FTell() - chunkStart;
+
+    if (currentPos != currentChunkSize)
+    {
+       ubyte remainingData[currentChunkSize - currentPos]<name="remaining data", comment="treat as padding data for alignment", bgcolor=cBlack>;
+    }
+}CCNTSubChunk;
+
+
+typedef struct SCHEDUL
+{
+    char chunkMagic[8]<comment="Schedule", bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    ubyte unk[4]<bgcolor=cRed>;
+    local int64 currentPos = 0;
+    local uint currentChunkSize = 0;    
+
+    CATTSubChunk cattSubChunk<name="@CATT SubChunk", optimize=false>;    
+    CCPTSubChunk ccptSubChunk<name="@CCPT SubChunk", optimize=false>;
+    CACTSubChunk cactSubChunk<name="@CACT SubChunk", optimize=false>;
+    CDPTSubChunk cdptSubChunk<name="@CDPT SubChunk", optimize=false>;
+    CTRKSubChunk ctrkSubChunk<name="@CTRK SubChunk", optimize=false>;
+    CBKTSubChunk cbktSubChunk<name="@CBKT SubChunk", optimize=false>;
+    CCNTSubChunk ccntSubChunk<name="@CCNT SubChunk", optimize=false>;
+}SchedulSubChunk;
+
+
+// RIDTBL SubChunk set
+typedef struct RIDT
+{
+    char chunkMagic[4]<bgcolor=cDkGreen>;
+    Assert(chunkMagic == "RIDT");
+
+    uint16 reserved<bgcolor=cBlack>;
+    uint16 unk<bgcolor=cRed>;
+    uint32 chunkSize<comment="From chunkMagic offset", bgcolor=cDkGreen>;
+    uint32 chunkItems<bgcolor=cDkGreen>;
+
+    if (chunkItems != 0)
+    {
+       fixSize = 16;
+       StringFixed ridtStringItems[chunkItems]<name="RIDT string item", bgcolor=cDkGreen, optimize=false>;
+    }
+}RIDTSubChunk;
+
+
+typedef struct RIDI
+{
+    char chunkMagic[4]<comment="Resource ID Item", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "RIDI");
+
+    uint16 reserved<bgcolor=cBlack>;
+    uint16 unk<bgcolor=cRed>;
+    uint32 chunkSize<comment="From chunkMagic offset", bgcolor=cDkGreen>;
+    uint32 chunkItems<bgcolor=cDkGreen>;
+
+    if (chunkItems != 0)
+    {
+       fixSize = 4;
+       StringFixed ridiStringItems[chunkItems]<name="RIDI string item", bgcolor=cDkGreen, optimize=false>;
+    }    
+}RIDISubChunk;
+
+
+typedef struct RIDTBL
+{
+    char chunkMagic[8]<comment="Resource ID Table", bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    ubyte unk[4]<bgcolor=cRed>;
+
+    RIDTSubChunk ridtSubChunk<name="RIDT SubChunk", optimize=false>;
+    RIDISubChunk ridiSubChunk<name="RIDI SubChunk", optimize=false>;
+}RIDTBLSubChunk;
+
+
+// @FCURVE SubChunk set
+typedef struct FCURVEITEM
+{
+    StringFixed itemName<name="@FCURVE item name", bgcolor=cDkGreen, optimize=false>;
+    uint32 itemSize<bgcolor=cDkGreen>;
+    ubyte padding[12]<bgcolor=cBlack>;
+    ubyte itemData[itemSize]<bgcolor=cDkGreen>;
+
+    local int64 nextItemPosition = FTell();
+    nextItemPosition += AdjustPostion();
+
+    FSeek(nextItemPosition);
+}FCURVEItem;
+
+
+typedef struct FCURVE
+{
+    char chunkMagic[8]<comment="Float Curve??", bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+    uint32 chunkItemsCount<bgcolor=cDkGreen>;
+    uint16 unkValues[chunkItemsCount]<bgcolor=cRed>;
+
+    local int64 itemStartPosition = FTell();
+    itemStartPosition += AdjustPostion();
+    FSeek(itemStartPosition);
+
+    if (chunkItemsCount != 0)
+    {
+       fixSize = 16;
+       FCURVEItem fcurveItem[chunkItemsCount]<name="@FCURVE Item", optimize=false>;
+    }
+}FCURVESubChunk;
+
+
+// Effect SubChunk
+typedef struct EFFECT
+{
+    char chunkMagic[8]<bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+
+    fixSize = 16;
+    StringFixed eventID<name="event id", bgcolor=cDkGreen, optimize=false>;
+    StringFixed snivString<name="sniv string", bgcolor=cDkGreen, optimize=false>;
+}EffectSubChunk;
+
+
+// Light SubChunk set
+typedef struct LIGHTITEM
+{
+    StringFixed itemName<name="Light item name", bgcolor=cDkGreen, optimize=false>;
+    uint32 itemSize<bgcolor=cDkGreen>;
+    ubyte padding[12]<bgcolor=cBlack>;
+    ubyte itemData[itemSize]<bgcolor=cDkGreen>;
+
+    local int64 nextItemPosition = FTell();
+    nextItemPosition += AdjustPostion();
+
+    FSeek(nextItemPosition);
+}LightItem;
+
+
+typedef struct LIGHT
+{
+    char chunkMagic[8]<bgcolor=cDkGreen, bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+    uint32 chunkItemsCount<bgcolor=cDkGreen>;
+    uint16 unkValues[chunkItemsCount]<bgcolor=cRed>;
+    
+    local int64 itemStartPosition = FTell();
+    itemStartPosition += AdjustPostion();
+    FSeek(itemStartPosition);
+
+    if (chunkItemsCount != 0)
+    {
+       fixSize = 16;
+       LightItem lightItems[chunkItemsCount]<name="Light Item", optimize=false>;
+    }
+}LightSubChunk;
+
+
+// Element SubChunk
+typedef struct ELEMENT
+{
+    char chunkMagic[8]<bgcolor=cDkGreen>;
+    ubyte reserved[72]<bgcolor=cBlack>;
+}ElementSubChunk;
+
+
+// CTRKPro SubChunk
+typedef struct CTRKPRO
+{
+    char chunkMagic[8]<comment="Cinema Track Production??", bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    ubyte unk[4]<bgcolor=cRed>;
+}CTrkProSubChunk;
+
+
+// String Subchunk
+typedef struct STRING
+{
+    char chunkMagic[8]<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    ubyte unk[4]<bgcolor=cRed>;
+
+    local int64 cresStringOffsetAdjust = FTell();    
+    uint16 firstOffsetRead<hidden=true>;
+    local uint32 firstOffset = firstOffsetRead + cresStringOffsetAdjust;
+    local uint32 stringOffsetsCount = (firstOffset - cresStringOffsetAdjust) / 2;
+
+    FSeek(firstOffset - 2);
+    uint16 lastOffsetRead<hidden=true>;
+    local uint16 lastStringOffsetVal = lastOffsetRead;
+
+    if (lastStringOffsetVal == 0)
+    {
+       stringOffsetsCount--;
+    }   
+
+    FSeek(cresStringOffsetAdjust);
+    uint16 stringOffsets[stringOffsetsCount]<comment="relative from 1st offset", bgcolor=cDkGreen>;
+
+    local int i = 0;
+
+    for (i = 0; i < stringOffsetsCount; i++)
+    {      
+        FSeek(cresStringOffsetAdjust + stringOffsets[i]);
+        StringDynamic cresStringItems<name="String item", bgcolor=cDkGreen, optimize=false>;
+    }
+}StringSubChunk;
+
+
+// ClipGid SubChunk
+typedef struct CLIPGID
+{
+    char chunkMagic[8]<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    ubyte unk[4]<bgcolor=cRed>;
+}ClipGidSubChunk;
+
+
+// @CRES Chunk
+typedef struct CRESCHUNK
+{
+    char chunkMagic[6]<comment="Cinema Resource", bgcolor=cDkGreen>;
+    Assert(chunkMagic == "@CRES");
+
+    uint16 rowCount<comment="a row is 16bytes. rowCount * 16 = size of this chunk with the subchunk header.", bgcolor=cDkGreen>;
+    ubyte unk2[2]<bgcolor=cRed>;
+    uint16 subChunksCount<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+
+    local int64 currentPos = FTell();
+    char subChunkMagicRead[8]<hidden=true>;
+
+    switch (subChunkMagicRead)
+    {
+           case "schedul":
+                FSeek(currentPos);
+                SchedulSubChunk schedulSubChunk<name="schedul SubChunk", optimize=false, open=false>;
+                break;              
+ 
+          case "RIDTBL":
+                FSeek(currentPos);
+                RIDTBLSubChunk ridtblSubChunk<name="RIDTBL SubChunk", optimize=false, open=false>;
+                break;
+        
+           case "@FCURVE":
+                FSeek(currentPos);
+                FCURVESubChunk fcurveSubChunk<name="@FCURVE SubChunk", optimize=false, open=false>;
+                break;
+
+           case "Effect":
+                FSeek(currentPos);
+                EffectSubChunk effectSubChunk<name="@Effect SubChunk", optimize=false, open=false>;
+                break;
+
+           case "Light":
+                FSeek(currentPos);
+                LightSubChunk lightSubChunk<name="Light SubChunk", optimize=false, open=false>;
+                break;  
+
+           case "Element":
+                FSeek(currentPos);
+                Assert(rowCount == 6);
+                ElementSubChunk elementSubChunk<name="Element SubChunk", optimize=false, open=false>;
+                break;
+
+           case "CTrkPro":
+                FSeek(currentPos);
+                CTrkProSubChunk ctrkProSubChunk<name="CTrkPro SubChunk", optimize=false, open=false>; 
+                ubyte unkCTrkProSubChunkData[(rowCount * 16) - (16 * 2)]<bgcolor=cRed>;               
+                break;            
+
+           case "String":
+                FSeek(currentPos);
+                StringSubChunk stringSubChunk<name="String SubChunk", optimize=false, open=false>;
+                break;
+
+            case "ClipGid":
+                FSeek(currentPos);
+                ClipGidSubChunk clipGidSubChunk<name="ClipGid SubChunk", optimize=false, open=false>;
+                ubyte unkClipGidSubChunkData[(rowCount * 16) - (16 * 2)]<bgcolor=cRed>;               
+                break;      
+
+           default:
+                  FSeek(currentPos);
+                  char subChunkMagic[8]<bgcolor=cRed>; 
+                  break;
+    }
+}CRESChunk;
+
+
+// Header
+struct FILE
+{
+    Header header<name="Header", optimize=false, open=true>;
+    CRSTChunk crstChunk<name="@CRST Chunk", optimize=false, open=false>;
+
+    local int64 currentPos = FTell();    
+    local int i = 0;
+
+    for (i = 0; i < crstChunk.cresChunksCount; i++)
+    {
+         FSeek(currentPos + crstChunk.cresOffsets[i]);
+         CRESChunk cresChunk<name="@CRES Chunk", optimize=false, open=false>;
+    }
+}File<name="Event_scb file", open=true>;

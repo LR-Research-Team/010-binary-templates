@@ -1,0 +1,77 @@
+//------------------------------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: Event_srb.bt
+//   Authors: Surihix
+//   Version: 1.0
+//   Purpose: Parse srb files that are packed inside .xwb files
+//  Category: 
+// File Mask: *.srb
+//  ID Bytes: SRB
+//   History: 
+//   1.0   2024-12-31 Surihix: Initial version
+//------------------------------------------------------------------------
+
+BigEndian();
+
+typedef struct HEADER
+{
+    char magic[4]<name="Chunk Magic", comment="Sound Resource Binary", bgcolor=cDkGreen>;
+    Assert(magic == "SRB");
+
+    char version[8]<bgcolor=cDkGreen>;
+    ubyte reserved[8]<bgcolor=cBlack>;
+    uint32 srbCblkChunksCount<bgcolor=cDkGreen>;
+}Header;
+
+
+// Shared structs
+local int fixSize = 16;
+typedef struct STRINGFIXED
+{
+    char stringData[fixSize];
+}StringFixed<name="string fixed value", read=this.stringData>;
+
+
+// SRBCBLK Chunk set
+typedef struct SRBCBLKITEM
+{
+    ubyte unk[4]<bgcolor=cRed>;
+    StringFixed itemName<name="Item name", bgcolor=cDkGreen>;
+    ubyte unkData[20]<bgcolor=cRed>;
+}SrbCblkItem;
+
+
+typedef struct SRBCBLK
+{
+    StringFixed blockName<name="Block name", bgcolor=cDkGreen>;
+    uint32 index<bgcolor=cDkGreen>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    uint32 someSortOfHash<comment="should match with the one given in the @CBLK chunk, in the scb file.", bgcolor=cDkYellow>;
+    ubyte reserved2[8]<bgcolor=cBlack>;
+    uint32 itemsCount<bgcolor=cDkGreen>;
+
+    if (itemsCount != 0)
+    {
+        SrbCblkItem srbCblkItem[itemsCount]<name="SRB CBLK Item", optimize=false>;
+    }
+}SrbCblkChunk;
+
+
+struct FILE
+{
+    Header header<name="Main Header", optimize=false, open=true>;
+    
+    if (header.srbCblkChunksCount != 0)
+    {
+        SrbCblkChunk srbCblkChunk[header.srbCblkChunksCount]<name="SRB CBLK Chunk", optimize=false, open=false>;
+    }
+
+    local int64 fileSize = FileSize();
+    local int64 remainingData = fileSize - FTell();
+
+    if (remainingData != 0) 
+    {
+       ubyte unkData[remainingData]<bgcolor=cRed>;
+    } 
+}File<name="Event_srb file", open=true>;
