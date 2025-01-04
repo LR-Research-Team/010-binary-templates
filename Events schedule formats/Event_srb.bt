@@ -10,6 +10,7 @@
 //  ID Bytes: SRB
 //   History: 
 //   1.0   2024-12-31 Surihix: Initial version
+//   1.1   2025-01-05 Surihix: Updated few offsets
 //------------------------------------------------------------------------
 
 BigEndian();
@@ -47,7 +48,7 @@ typedef struct SRBCBLK
     StringFixed blockName<name="Block name", bgcolor=cDkGreen>;
     uint32 index<bgcolor=cDkGreen>;
     ubyte reserved[4]<bgcolor=cBlack>;
-    uint32 someSortOfHash<comment="should match with the one given in the @CBLK chunk, in the scb file.", bgcolor=cDkYellow>;
+    uint32 frameCount<comment="should match with the one given in the @CBLK chunk, in the scb file.", bgcolor=cDkGreen>;
     ubyte reserved2[8]<bgcolor=cBlack>;
     uint32 itemsCount<bgcolor=cDkGreen>;
 

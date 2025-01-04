@@ -10,6 +10,7 @@
 //  ID Bytes: SEDBSCB
 //   History: 
 //   1.0   2024-12-31 Surihix: Initial version
+//   1.1   2025-01-05 Surihix: Updated few offsets
 //------------------------------------------------------------------------
 
 LittleEndian();
@@ -106,6 +107,13 @@ typedef struct CATT
 }CATTSubChunk;
 
 
+typedef struct CCPOFFSET
+{
+    uint16 someID<comment="not sure about this one", bgcolor=cDkYellow>;
+    ubyte unkValues[2]<bgcolor=cRed>;
+}CCPTOffset;
+
+
 typedef struct CCPT
 {
     local uint32 chunkStart = FTell();
@@ -120,7 +128,7 @@ typedef struct CCPT
 
     if (chunkFieldsCount != 0)
     {
-       uint32 ccptOffsets[chunkFieldsCount]<name="@CCPT SubChunk Fields", bgcolor=cRed>;
+       CCPTOffset ccptOffset[chunkFieldsCount]<name="@CCPT SubChunk Offsets", optimize=false>;
     }
 
     local uint currentChunkSize = rowCount * 16;
@@ -138,7 +146,8 @@ typedef struct CACTITEM
     uint16 itemSize<comment="including this offset", bgcolor=cDkGreen>;
     ubyte reserved<bgcolor=cBlack>;
     ubyte itemIndex<bgcolor=cDkGreen>;
-    ubyte itemData[itemSize - 4]<bgcolor=cRed>;
+    char actorName[16]<bgcolor=cDkGreen>;
+    ubyte itemData[itemSize - 20]<bgcolor=cRed>;
 }CACTItem;
 
 
@@ -239,7 +248,11 @@ typedef struct CTRK
 typedef struct CBLKITEM
 {
     uint16 itemSize<comment="including this offset", bgcolor=cDkGreen>;
-    ubyte itemData[itemSize - 2]<bgcolor=cRed>;
+    ubyte unk[2]<bgcolor=cRed>;
+    uint32 frameID<comment="not fully sure as the value was something else in an other offset. '0' == don't display??", bgcolor=cDkYellow>;
+    ubyte unk2[4]<bgcolor=cRed>;
+    uint16 itemIndex<bgcolor=cDkGreen>;    
+    ubyte itemData[itemSize - 14]<bgcolor=cRed>;
 }CBLKItem;
 
 typedef struct CBLK
@@ -255,7 +268,7 @@ typedef struct CBLK
     char blockName[16]<comment="in shift-jis", bgcolor=cDkGreen>;
     ubyte reserved2[4]<bgcolor=cBlack>;
     
-    uint32 someSortOfHash<bgcolor=cDkYellow>;
+    uint32 frameCount<comment="no of frames used for this block. treat zeroes on the right as padding", bgcolor=cDkGreen>;
     uint16 blockItemsCount<bgcolor=cDkGreen>;    
     ubyte reserved3[22]<bgcolor=cBlack>;
 
