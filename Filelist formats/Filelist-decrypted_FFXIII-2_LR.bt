@@ -3,7 +3,7 @@
 //
 //      File: Filelist-decrypted_FFXIII-2_LR.bt
 //   Authors: Surihix
-//   Version: 1.2
+//   Version: 1.3
 //   Purpose: Parse FFXIII-2 and LR's decrypted filelist files
 //  Category: White Image filelist file
 // File Mask: *.bin
@@ -11,33 +11,91 @@
 //   History: 
 //   1.0   2023-10-18 Surihix: Initial version
 //   1.2   2023-10-21 Surihix: Changed template filename
+//   1.3   2025-01-08 Surihix: Updated offsets
 //---------------------------------------------------------------
 
 LittleEndian();
 
-typedef struct CHUNKINFO
+local uint32 chunkDataOffset_shared = 0;
+
+typedef struct ENCHEADER
 {
-    uint32 uncmpChunkSize<name="Uncompressed chunk size">;
-    uint32 cmpChunkSize<name="Compressed chunk size">;
-    uint chunkStart<name="Chunk Start Offset (relative from Data section)">;
-}ChunkInfoTable;
+    ubyte encryptionSeed[16]<bgcolor=cDkGreen>;
+
+    BigEndian();
+    uint32 encryptedDataSize<bgcolor=cDkGreen, comment="this is in Big Endian">;
+    
+    LittleEndian();
+    uint32 encryptionTag<bgcolor=cDkGreen, comment="always 501232760">;
+    ubyte reserved[8]<bgcolor=cBlack>;
+
+    chunkDataOffset_shared = 32;
+}EncHeader;
+
+
+typedef struct HEADER
+{
+    uint32 chunkInfoOffset<bgcolor=cDkGreen>;
+    uint32 chunkDataOffset<bgcolor=cDkGreen>;
+    uint32 fileCount<bgcolor=cDkGreen>;
+
+    chunkDataOffset_shared += chunkDataOffset;
+}Header;
 
 
 typedef struct ENTRYTABLE
 {
-    uint32 fileCode<name="File Code">;
-    uint16 fileInfoPos<name="Position of file path in the chunk">;
-    ubyte fileInfoPos<name="Chunk number where the file path exists">;
-    ubyte unknown<name="Unknown", hidden=true>;
+    uint32 fileCode<bgcolor=0x41446c>;
+    uint16 fileInfoPos<bgcolor=0x41446c, comment="position of the file info string in the uncompressed chunk">;
+    ubyte chunkNumber<bgcolor=0x41446c, comment="chunk number where the file info string exists">;
+    ubyte fileTypeID<bgcolor=0x41446c>;
 }FileEntryTable;
+
+
+typedef struct CHUNKINFO
+{
+    uint32 uncmpChunkSize<bgcolor=0xbf6b6c>;
+    uint32 cmpChunkSize<bgcolor=0xbf6b6c>;
+    uint chunkStart<bgcolor=0xbf6b6c, comment="relative from the 'chunkData' offset. add 32 bytes more, if filelist is encrypted.">;
+
+    local uint32 currentPos = FTell();
+
+    FSeek(chunkDataOffset_shared + chunkStart);   
+    ubyte chunkData[cmpChunkSize]<bgcolor=0x5d35a2>;
+
+    FSeek(currentPos);   
+}ChunkInfoTable;
+
+
+typedef struct ENCFOOTER
+{
+    uint32 encryptedDataSizeFooter<bgcolor=cDkGreen>;
+    uint32 encryptedDataChecksumValue<bgcolor=cDkGreen, comment="sum of all 4th byte values from the 0th byte of the encrypted data">;
+}EncFooter;
 
 
 struct FILE
 {
-    FSeek(20);    
-    uint32 encTagCheck<hidden=true>;   
-    if(encTagCheck == 501232760)
+    FSeek(20);
+    uint32 encTagCheck<hidden=true>;
+
+    local int isEncrypted = 0;
+    local uint32 encDataEndOffset_shared = 0;
+
+    if (encTagCheck == 501232760)
     {
+       FSeek(0);
+       EncHeader encHeader<name="Encryption Header", optimize=false, open=true>;
+       encDataEndOffset_shared = encHeader.encryptedDataSize + 32;
+
+       FSeek(encDataEndOffset_shared);
+       uint32 encryptedDataSizeFooter<hidden=true>;
+
+       if (encHeader.encryptedDataSize != encryptedDataSizeFooter) 
+       {
+          isEncrypted = 1;
+       }
+       
        FSeek(32);
     }
     else 
@@ -45,19 +103,29 @@ struct FILE
        FSeek(0);
     }
 
-    uint32 chunkInfoStart<name="Chunk Info Section Offset">;
-    uint32 chunkDataStart<name="Chunk Data Section Offset">;
-    uint32 totalFileCount<name="Total Files">;
-
-    struct ENTRIES
+    if (isEncrypted == 0)
     {
-        FileEntryTable fileEntries[totalFileCount]<name="File Entry", optimize=false>;
-    }FileEntries<name="File Entries">;
+       Header header<name="Header", optimize=false, open=true>;
+       
+       struct ENTRIES
+       {
+           FileEntryTable fileEntries[header.fileCount]<name="File Entry", optimize=false>;
+       }FileEntries<name="File Entries">;
+       
+       struct CHUNKS
+       {
+           ChunkInfoTable chunkInfoData[(header.chunkDataOffset - header.chunkInfoOffset) / 12]<name="Chunk Info", optimize=false>;
+       }FileChunks<name="Chunks">;
 
-    struct CHUNKS
-    {
-        local int chunkCount = (chunkDataStart - chunkInfoStart) / 12;
-        ChunkInfoTable chunkInfoData[chunkCount]<name="Chunk Info", optimize=false>;
-    }FileChunks<name="Chunks Info">;
+       if (encTagCheck == 501232760)
+       {
+          FSeek(encDataEndOffset_shared);
+          EncFooter encFooter<name="Encryption Footer", optimize=false>;
+       }
+    }
+    else 
+    {       
+       Printf("Filelist is encrypted. unable to parse fully!");
+    }
           
 }File<open=true, name="FF13-2/LR Filelist">;

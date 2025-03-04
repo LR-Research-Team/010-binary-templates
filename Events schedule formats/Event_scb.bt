@@ -3,7 +3,7 @@
 //
 //      File: Event_scb.bt
 //   Authors: Surihix
-//   Version: 1.0
+//   Version: 1.2
 //   Purpose: Parse scb files that are packed inside .xwb files
 //  Category: 
 // File Mask: *.scb
@@ -11,6 +11,7 @@
 //   History: 
 //   1.0   2024-12-31 Surihix: Initial version
 //   1.1   2025-01-05 Surihix: Updated few offsets
+//   1.2   2025-01-08 Surihix: Re ordered main struct's name property
 //------------------------------------------------------------------------
 
 LittleEndian();
@@ -653,4 +654,4 @@ struct FILE
          FSeek(currentPos + crstChunk.cresOffsets[i]);
          CRESChunk cresChunk<name="@CRES Chunk", optimize=false, open=false>;
     }
-}File<name="Event_scb file", open=true>;
+}File<open=true, name="Event_scb file">;

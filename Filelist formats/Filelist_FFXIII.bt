@@ -3,7 +3,7 @@
 //
 //      File: Filelist_FFXIII.bt
 //   Authors: Surihix
-//   Version: 1.2
+//   Version: 1.3
 //   Purpose: Parse FFXIII-1's filelist files
 //  Category: White Image filelist file
 // File Mask: *.bin
@@ -11,41 +11,58 @@
 //   History: 
 //   1.0   2023-06-30 Surihix: Initial version
 //   1.2   2023-10-21 Surihix: Changed template filename
+//   1.3   2025-01-08 Surihix: Updated offsets
 //---------------------------------------------------------
 
 LittleEndian();
 
-typedef struct CHUNKINFO
+local uint32 chunkDataOffset_shared = 0;
+
+typedef struct HEADER
 {
-    uint32 uncmpChunkSize<name="Uncompressed chunk size">;
-    uint32 cmpChunkSize<name="Compressed chunk size">;
-    uint chunkStart<name="Chunk Start Offset (relative from Data section)">;
-}ChunkInfoTable;
+    uint32 chunkInfoOffset<bgcolor=cDkGreen>;
+    uint32 chunkDataOffset<bgcolor=cDkGreen>;
+    uint32 fileCount<bgcolor=cDkGreen>;
+
+    chunkDataOffset_shared = chunkDataOffset;
+}Header;
 
 
 typedef struct ENTRYTABLE
 {
-    uint32 fileCode<name="File Code">;
-    uint16 chunkNo<name="Chunk number where the file path exists">;
-    uint16 fileInfoPos<name="Position of file path in the chunk">;
+    uint32 fileCode<bgcolor=0x41446c>;
+    uint16 chunkNumber<bgcolor=0x41446c, comment="chunk number where the file info string exists">;
+    uint16 fileInfoPos<bgcolor=0x41446c, comment="position of the file info string in the uncompressed chunk">;
 }FileEntryTable;
+
+
+typedef struct CHUNKINFO
+{
+    uint32 uncmpChunkSize<bgcolor=0xbf6b6c>;
+    uint32 cmpChunkSize<bgcolor=0xbf6b6c>;
+    uint chunkStart<bgcolor=0xbf6b6c, comment="relative from the 'chunkData' offset">;
+
+    local uint32 currentPos = FTell();
+
+    FSeek(chunkDataOffset_shared + chunkStart);   
+    ubyte chunkData[cmpChunkSize]<bgcolor=0x5d35a2>;
+
+    FSeek(currentPos);   
+}ChunkInfoTable;
 
 
 struct FILE
 {
-    uint32 chunkInfoStart<name="Chunk Info Section Offset">;
-    uint32 chunkDataStart<name="Chunk Data Section Offset">;
-    uint32 totalFileCount<name="Total Files">;
+    Header header<name="Header", optimize=false, open=true>;
 
     struct ENTRIES
     {
-        FileEntryTable fileEntries[totalFileCount]<name="File Entry", optimize=false>;
+        FileEntryTable fileEntries[header.fileCount]<name="File Entry", optimize=false>;
     }FileEntries<name="File Entries">;
 
     struct CHUNKS
     {
-        local int chunkCount = (chunkDataStart - chunkInfoStart) / 12;
-        ChunkInfoTable chunkInfoData[chunkCount]<name="Chunk Info", optimize=false>;
-    }FileChunks<name="Chunks Info">;
+        ChunkInfoTable chunkInfoData[(header.chunkDataOffset - header.chunkInfoOffset) / 12]<name="Chunk Info", optimize=false>;
+    }FileChunks<name="Chunks">;
           
 }File<open=true, name="FF13-1 Filelist">;
