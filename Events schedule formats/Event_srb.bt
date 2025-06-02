@@ -3,7 +3,7 @@
 //
 //      File: Event_srb.bt
 //   Authors: Surihix
-//   Version: 1.2
+//   Version: 1.3
 //   Purpose: Parse srb files that are packed inside .xwb files
 //  Category: 
 // File Mask: *.srb
@@ -12,6 +12,7 @@
 //   1.0   2024-12-31 Surihix: Initial version
 //   1.1   2025-01-05 Surihix: Updated few offsets
 //   1.2   2025-01-08 Surihix: Re ordered main struct's name property
+//   1.3   2025-06-02 Surihix: Added frameID offset
 //------------------------------------------------------------------------
 
 BigEndian();
@@ -40,7 +41,8 @@ typedef struct SRBCBLKITEM
 {
     ubyte unk[4]<bgcolor=cRed>;
     StringFixed itemName<name="Item name", bgcolor=cDkGreen>;
-    ubyte unkData[20]<bgcolor=cRed>;
+    uint32 frameID<bgcolor=cDkYellow, comment="not fully sure as the value was something else in an other offset. '0' == don't display??">;
+    ubyte unkData[16]<bgcolor=cRed>;
 }SrbCblkItem;
 
 
