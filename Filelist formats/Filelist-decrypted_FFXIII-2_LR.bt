@@ -3,7 +3,7 @@
 //
 //      File: Filelist-decrypted_FFXIII-2_LR.bt
 //   Authors: Surihix
-//   Version: 1.3
+//   Version: 1.4
 //   Purpose: Parse FFXIII-2 and LR's decrypted filelist files
 //  Category: White Image filelist file
 // File Mask: *.bin
@@ -12,6 +12,7 @@
 //   1.0   2023-10-18 Surihix: Initial version
 //   1.2   2023-10-21 Surihix: Changed template filename
 //   1.3   2025-01-08 Surihix: Updated offsets
+//   1.4   2025-07-14 Surihix: Added md5 comment
 //---------------------------------------------------------------
 
 LittleEndian();
@@ -20,7 +21,7 @@ local uint32 chunkDataOffset_shared = 0;
 
 typedef struct ENCHEADER
 {
-    ubyte encryptionSeed[16]<bgcolor=cDkGreen>;
+    ubyte encryptionSeed[16]<bgcolor=cDkGreen, comment="also encrypted data's md5 (excluding size and hash offsets)">;
 
     BigEndian();
     uint32 encryptedDataSize<bgcolor=cDkGreen, comment="this is in Big Endian">;
