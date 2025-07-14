@@ -21,7 +21,7 @@ local uint32 chunkDataOffset_shared = 0;
 
 typedef struct ENCHEADER
 {
-    ubyte encryptionSeed[16]<bgcolor=cDkGreen, comment="also encrypted data's md5 (excluding size and hash offsets)">;
+    ubyte encryptionSeed[16]<bgcolor=cDkGreen, comment="decrypted filelist data's md5 hash (excluding padding, encryption header and footer sections)">;
 
     BigEndian();
     uint32 encryptedDataSize<bgcolor=cDkGreen, comment="this is in Big Endian">;
