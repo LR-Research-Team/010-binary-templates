@@ -74,7 +74,7 @@ typedef struct resSection_s{
             PHBData_t phbData<name="PHB">;  
             break;
         case "txb":
-            uint gtexChunkStartRelative;
+            uint gtexChunkStart;
             ubyte reserved[12];
             GTEXData_t gtexData<name="GTEX">;
             break;

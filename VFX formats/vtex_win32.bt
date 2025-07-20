@@ -1,0 +1,154 @@
+//----------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: vtex_win32.bt
+//   Authors: Surihix
+//   Version: 1.0
+//   Purpose: Parse FF13 trilogy's vtex files
+//  Category: FF13 trilogy vtex files
+// File Mask: *.vtex
+//  ID Bytes: 53 45 44 42 76 74 65 78
+//   History: 
+//   1.0   2025-07-20 Surihix: Initial version
+//----------------------------------------------------
+
+LittleEndian();
+
+
+typedef struct MIPINFOTABLE
+{
+   uint32 mipOffset<comment="Offset in IMGB file", bgcolor=0xbf6b6c>;
+   uint32 mipSize<bgcolor=0xbf6b6c>;
+}MipInfoTable;
+
+
+typedef struct GTEX
+{
+    BigEndian();
+    char magic[4]<bgcolor=0x41446c>;
+    Assert(magic == "GTEX");
+
+    ubyte version<bgcolor=0x41446c>;
+    ubyte unkFlag<bgcolor=cRed>;
+    ubyte textureFormat<comment="3 = R8G8B8A8 (with Mips), 4 = R8G8B8A8 (No Mips), 24 = DXT1, 25 = DXT3, 26 = DXT5", bgcolor=0x41446c>; 
+    ubyte mipCount<bgcolor=0x41446c>;
+    ubyte unkFlag2<bgcolor=cRed>;
+    ubyte textureType<comment="0 = classic, 1 = cubemap, 2 = stacked", bgcolor=0x41446c>;
+    uint16 width<bgcolor=0x41446c>;
+    uint16 height<bgcolor=0x41446c>;
+    uint16 depth <comment="if stacked, treat this as texture count (shares same mipCount, format, & dimensions)", bgcolor=0x41446c>;
+    uint32 mipInfoTableOffset<comment="relative from GTEX chunk", bgcolor=0x41446c>;
+    ubyte reserved[4]<bgcolor=cBlack>;
+    
+    local int mipInfoCount;
+    
+    switch (textureType)
+    {
+        // classic
+        case 0:
+             mipInfoCount = mipCount;
+             break;
+    
+        // cubemap
+        case 1:
+            mipInfoCount = 6 * mipCount;
+            break;
+    
+        // stacked
+        case 2:
+             mipInfoCount = mipCount;
+             break;
+    
+        default:
+            Printf("Unknown texture type!\n");
+            break;
+    }
+    
+    if (mipInfoCount > 0)
+    {
+       MipInfoTable mipInfoTable[mipInfoCount]<name="MipInfoTable">;
+    }
+
+}Gtex;
+
+
+typedef struct VTEXINFO
+{
+    LittleEndian();
+    ubyte reserved[4]<bgcolor=cBlack>;
+    uint32 totalSize<comment="same as the one in Header", bgcolor=0x6213a2>;
+    uint16 unkVal<bgcolor=cRed>;
+    uint16 unkVal2<bgcolor=cRed>;
+    ubyte unkFlag<bgcolor=cRed>;
+    ubyte unkFlag2<bgcolor=cRed>;
+    ubyte unkFlag3<bgcolor=cRed>;
+    ubyte unkFlag4<bgcolor=cRed>;
+
+    // Warning: this could fail horribly, be careful....
+    local int unkDataSize;
+    if (unkFlag3)
+    {
+       unkDataSize = 44;
+    }
+    else
+    {
+       unkDataSize = 32;
+    }
+
+    ubyte unkData[unkDataSize]<bgcolor=cRed>;
+
+    char vtexName[16]<bgcolor=0x6213a2>;
+    Assert(vtexName[0] == 'v');
+
+    char vtexExtn[4]<comment="written in reverse", bgcolor=0x6213a2>;
+    Assert(vtexExtn == "xetv");
+
+    ubyte reserved2[4]<bgcolor=cBlack>;
+    uint32 unkVal3<bgcolor=cRed>;
+    uint32 vtexInfoSize<bgcolor=0x6213a2>; 
+    uint32 totalSizeNoHeader<comment="GTEX chunk, File padding & all mips size", bgcolor=0x6213a2>; 
+    ubyte reserved3[4]<bgcolor=cBlack>;
+}VtexInfo;
+
+
+typedef struct HEADER
+{
+    char magic[8]<bgcolor=cDkGreen>;
+    Assert(magic == "SEDBvtex");
+
+    uint32 reserved<bgcolor=cBlack>;
+    ubyte endiannessFlag<bgcolor=cDkGreen>;
+
+    LittleEndian();
+    ubyte resourceType<bgcolor=cDkGreen>;
+    uint16 headerSize<bgcolor=cDkGreen>;
+    uint32 totalSize<comment="Header, Vtex Info, GTEX chunk, File padding & all mips size", bgcolor=cDkGreen>;
+    ubyte reserved2[4]<bgcolor=cBlack>;
+
+    BigEndian();
+    uint16 unkVal<bgcolor=cRed>;
+
+    ubyte unkFlag<bgcolor=cRed>;
+    ubyte unkFlag2<bgcolor=cRed>;
+    ubyte unkFlag3<bgcolor=cRed>;
+    ubyte padding[3]<bgcolor=cBlack>;
+    ubyte reserved3[16]<bgcolor=cBlack>;
+}Header;
+
+
+struct FILE
+{
+    Header header<name="Header", open=true>;
+
+    VtexInfo vtexInfo<name="Vtex Info">;
+
+    Gtex gtex<name="GTEX">;
+
+    local int64 paddingAmount = FileSize() - FTell();
+
+    if (paddingAmount > 0)
+    {
+       ubyte filePadding[paddingAmount]<bgcolor=cBlack>;
+    }
+
+}File<name="FF13 vtex_win32 files", open=true>;

@@ -14,8 +14,8 @@
 
 typedef struct MipInfoTable_s
 {
-   uint32 mipOffset<comment="Offset in IMGB file">;
-   uint32 mipSize;
+   uint mipOffset<comment="Offset in IMGB file">;
+   uint mipSize;
 } MipInfoTable_t<name="MipInfoTable">;
 
 typedef struct GTEXData_s
@@ -25,43 +25,47 @@ typedef struct GTEXData_s
    BigEndian();
 
    ubyte version;
-   ubyte unk;
+   ubyte unkFlag;
    ubyte textureFormat<comment="3 = R8G8B8A8 (with Mips), 4 = R8G8B8A8 (No Mips), 24 = DXT1, 25 = DXT3, 26 = DXT5">; 
-   ubyte mipMapCount;
-   ubyte unk2;
+   ubyte mipCount;
+   ubyte unkFlag2;
    ubyte textureType<comment="0 = classic, 1 = cubemap, 2 = stacked">;
    ushort width;
    ushort height;
    ushort depth <comment="if stacked, treat this as texture count (shares same mipCount, format, & dimensions)">;
-   uint mipMapInfoTableOffsetRelative;
+   uint mipInfoTableOffset<comment="relative from GTEX chunk">;
    ubyte reserved[4];
 
-   local int mipInfoCount;
+   local int mipInfoCount = 0;
 
    switch(textureType)
    {
        // classic
        case 0:
-            mipInfoCount = mipMapCount;
+            mipInfoCount = mipCount;
             break;
 
        // cubemap
        case 1:
-           mipInfoCount = 6 * mipMapCount;
+           mipInfoCount = 6 * mipCount;
            break;
 
        // stacked
        case 2:
-            mipInfoCount = mipMapCount;
+            mipInfoCount = mipCount;
             break;
 
        default:
-           Assert("Unknown texture type!");
+           Printf("Unknown texture type!\n");
            break;
    }
 
-   MipInfoTable_t mipInfoTable[mipInfoCount];
+    if (mipInfoCount > 0)
+    {
+       MipInfoTable_t mipInfoTable[mipInfoCount]<name="MipInfoTable">;
+    }
 
    LittleEndian();
+
 } GTEXData_t<name="GTEX Data">;
 
