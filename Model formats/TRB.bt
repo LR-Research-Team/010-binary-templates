@@ -3,12 +3,13 @@
 //
 //      File: trb.bt
 //   Authors: Joschka
-//   Version: 0.1
+//   Version: 0.2
 //   Purpose: Parsing trb files
 //  Category: Game file
 // File Mask: *.trb
 //  ID Bytes: SEDBRES
 //   History: 
+//   0.2   2025-07-20 Surihix: Added txb section
 //------------------------------------------------
 
 #ifndef TRB_H
@@ -21,6 +22,7 @@ LittleEndian();
 #include "Sections/TRBSKL.bt"
 #include "Sections/TRBWRB.bt"
 #include "Sections/TRBSHD.bt"
+#include "Sections/TRBTXB.bt"
 #include "TRBChunk.bt"
 #include "TRBSection.bt"
 

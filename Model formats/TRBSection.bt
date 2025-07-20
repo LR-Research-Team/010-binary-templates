@@ -3,12 +3,13 @@
 //
 //      File: trbSection.bt
 //   Authors: Joschka
-//   Version: 0.1
+//   Version: 0.2
 //   Purpose: Various section helpers
 //  Category: Game file
 // File Mask: 
 //  ID Bytes: 
 //   History: 
+//   0.2   2025-07-20 Surihix: Added txb section
 //------------------------------------------------
 
 
@@ -71,6 +72,11 @@ typedef struct resSection_s{
             break;
         case "PHB":
             PHBData_t phbData<name="PHB">;  
+            break;
+        case "txb":
+            uint gtexChunkStartRelative;
+            ubyte reserved[12];
+            GTEXData_t gtexData<name="GTEX">;
             break;
         default:
             break;
