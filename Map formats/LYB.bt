@@ -8,7 +8,7 @@ TODO
 -BaseObjects_Light_LightBaseObject_Field0_s Data field size is weird
 -CelestialSphere_FloatField_s with float enums seems to vary with type (see 0100 case in s00100b)
 -BaseObjects_TriggerBox_TriggerBoxBaseObject_Field0_t TODO s00110m
-//------------------------------------------------*/
+------------------------------------------------*/
 
 #include "LYB/Utils.bt"
 #include "LYB/LybObject.bt"
