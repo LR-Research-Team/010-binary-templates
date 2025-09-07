@@ -1,16 +1,14 @@
 //Version 0.1
 
-//------------------------------------------------
-//TODO
-// 
-//
-// 
-// 
-//
-//
-//
-//
-//------------------------------------------------
+/*------------------------------------------------
+TODO
+-Rework instance field 1, seems to be typed based? uint unkData[3] has variable size... Same for field 0
+-cubemapbaseobject different between s00070b and s0007s, more RE needed
+-BaseObjects_ScreenEnv_ScreenEnvBaseObject, more explicit names for offsets to other fields
+-BaseObjects_Light_LightBaseObject_Field0_s Data field size is weird
+-CelestialSphere_FloatField_s with float enums seems to vary with type (see 0100 case in s00100b)
+-BaseObjects_TriggerBox_TriggerBoxBaseObject_Field0_t TODO s00110m
+//------------------------------------------------*/
 
 #include "LYB/Utils.bt"
 #include "LYB/LybObject.bt"
