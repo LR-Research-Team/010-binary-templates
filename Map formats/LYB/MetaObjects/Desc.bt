@@ -1,0 +1,7 @@
+typedef struct MetaObjects_Desc_s(int rStart)
+{
+    uint InfoStringOffset;
+    uint InfoCount;    
+    local string TypeObjectProxyString = ReadString(rStart + InfoStringOffset);
+        
+} MetaObjects_Desc_t<bgcolor=cRed>;

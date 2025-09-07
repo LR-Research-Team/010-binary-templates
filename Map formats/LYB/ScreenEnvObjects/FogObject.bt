@@ -1,0 +1,32 @@
+//ScreenEnvObjects/Fog/FogObject
+
+typedef struct ScreenEnvObjects_Fog_FogObject_Field0_s(int rStart)
+{
+    uint Ref0;    
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    float data[11];
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);    
+}ScreenEnvObjects_Fog_FogObject_Field0_t<bgcolor=cRed>;
+
+typedef struct ScreenEnvObjects_Fog_FogObject_s(int rStart)
+{
+    uint reserved0;
+    ScreenEnvObjects_Fog_FogObject_Field0_t field0(rStart);
+    uint unk0[2];
+    float unk1;
+    uint reserved1[3]; 
+    //Checks
+    Assert(reserved0 == 0);  
+    local int i<hidden=true> = 0;
+    for(i=0; i < 2; i++)
+    {
+         Assert(unk0[i] == 1);
+    }
+    for(i=0; i < 3; i++)
+    {
+         Assert(reserved1[i] == 0);
+    }
+}ScreenEnvObjects_Fog_FogObject_t<bgcolor=cRed>;

@@ -1,0 +1,51 @@
+//DrawEnvObjects/DrawEnv/DrawEnvObject
+
+typedef struct DrawEnvObjects_DrawEnv_DrawEnvObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    uint countMaybe0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint offsetToAsset0;   
+    FSeek(tmp);
+    
+}DrawEnvObjects_DrawEnv_DrawEnvObject_Field0_t<bgcolor=cRed>;
+
+typedef struct DrawEnvObjects_DrawEnv_DrawEnvObject_Field1_0_s
+{
+    uint AssetOffset;
+    uint AssetIDs;    
+}DrawEnvObjects_DrawEnv_DrawEnvObject_Field1_0_t<bgcolor=cRed>;
+
+typedef struct DrawEnvObjects_DrawEnv_DrawEnvObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    uint entryCount;
+    FSeek(Ref0_0 + rStart);
+    DrawEnvObjects_DrawEnv_DrawEnvObject_Field1_0_t AssetsTable[entryCount]<optimize=false>;
+    FSeek(tmp);
+    
+}DrawEnvObjects_DrawEnv_DrawEnvObject_Field1_t<bgcolor=cRed>;
+
+typedef struct DrawEnvObjects_DrawEnv_DrawEnvObject_s(int rStart)
+{
+    uint reserved0; 
+    DrawEnvObjects_DrawEnv_DrawEnvObject_Field0_t field0(rStart);     
+    DrawEnvObjects_DrawEnv_DrawEnvObject_Field0_t field0Bis(rStart);
+    uint offsetToAsset2;
+    uint offsetToAsset3;
+    uint offsetToAsset4;
+    uint reserved3; 
+    uint offsetToAsset0;
+    float unk0;
+    uint reserved4;        
+    DrawEnvObjects_DrawEnv_DrawEnvObject_Field1_t field1(rStart);
+    //Checks
+    local int i<hidden=true> = 0;
+    Assert(reserved0 == 0);
+    //Assert(reserved3 == 0); //Seen as 1 in s00100b (LR)
+    Assert(reserved4 == 0);
+}DrawEnvObjects_DrawEnv_DrawEnvObject_t<bgcolor=cRed>;

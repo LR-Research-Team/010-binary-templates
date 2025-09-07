@@ -1,0 +1,10 @@
+//ScreenEnvObjects/FilmicCorrection/FilmicCorrectionObject
+
+typedef struct ScreenEnvObjects_FilmicCorrection_FilmicCorrectionObject_s(int rStart)
+{
+    uint reserved0;
+    CelestialSphere_FloatField_t field0(rStart);
+    uint unk;
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_FilmicCorrection_FilmicCorrectionObject_t<bgcolor=cRed>;

@@ -1,0 +1,20 @@
+typedef struct MetaObjects_PackageSettings_s(int rStart)
+{
+    uint id<name="ID",bgcolor=cBlue>;
+    uint hash<name="Hash",bgcolor=cBlue>;
+    uint assetTypeOffset<name="Asset type offset",bgcolor=cBlue>;
+    uint assetNameOffset<name="Asset name offset",bgcolor=cBlue>;        
+    uint minAssetIdx;
+    uint maxAssetIdx;
+    uint descOffset;    
+    uint versionStringOffset;
+    uint nullStringOffset;
+    uint reserved0;
+    local string assetName = ReadString(rStart + assetNameOffset);
+    local string versionString = ReadString(rStart +versionStringOffset);   
+    local string nullString = ReadString(rStart + nullStringOffset);
+    
+    //Checks
+    Assert(reserved0 == 0);
+    Assert(nullString == "");
+} MetaObjects_PackageSettings_t<bgcolor=cRed>;

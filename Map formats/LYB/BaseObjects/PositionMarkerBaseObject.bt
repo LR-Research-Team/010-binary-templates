@@ -1,0 +1,49 @@
+//BaseObjects/PositionMarker/PositionMarkerBaseObject
+
+typedef struct BaseObjects_PositionMarker_PositionMarkerBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    if (Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    if(Ref0_0 == 0)
+    {    
+        FSeek(tmp);
+        return;
+    }
+    FSeek(Ref0_0 + rStart);
+    uint unkBigEndianValues[3];
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(Ref0_0);
+}BaseObjects_PositionMarker_PositionMarkerBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_PositionMarker_PositionMarkerBaseObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    if (Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint unk;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(unk == 0);
+}BaseObjects_PositionMarker_PositionMarkerBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_PositionMarker_PositionMarkerBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;    
+    BaseObjects_PositionMarker_PositionMarkerBaseObject_Field0_t field0(rStart);
+    uint unk0;    
+    BaseObjects_PositionMarker_PositionMarkerBaseObject_Field1_t field1(rStart);
+    //Checks
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    Assert(unk0 == 0);
+}BaseObjects_PositionMarker_PositionMarkerBaseObject_t<bgcolor=cRed>;

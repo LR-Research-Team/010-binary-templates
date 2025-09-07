@@ -1,0 +1,9 @@
+//MiscObjects/TargetViewerSettings/TargetViewerSettingsObject
+
+typedef struct MiscObjects_TargetViewerSettings_TargetViewerSettingsObject_s(int rStart)
+{
+    uint reserved0;
+    //Checks
+    Assert(reserved0 ==0);
+    
+}MiscObjects_TargetViewerSettings_TargetViewerSettingsObject_t<bgcolor=cRed>;

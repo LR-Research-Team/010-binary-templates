@@ -1,0 +1,92 @@
+//BaseObjects/Attribute/AttributeBaseObject
+
+typedef struct BaseObjects_Attribute_AttributeBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    if (Ref0_0 == 0)
+    {
+        FSeek(tmp);
+        return;
+    }
+    FSeek(Ref0_0 + rStart);
+    uint unk;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(unk==0);
+}BaseObjects_Attribute_AttributeBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_Attribute_AttributeBaseObject_Field1_0_s(int rStart)
+{
+    uint NameOffset;
+    Assert(NameOffset);
+    uint unk0;
+    uint unk1;    
+    local string Name = ReadString(rStart + NameOffset);
+    Assert(unk0 == 0);
+    //Assert(unk1 == 0);
+}BaseObjects_Attribute_AttributeBaseObject_Field1_0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_Attribute_AttributeBaseObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    uint entryCount;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    BaseObjects_Attribute_AttributeBaseObject_Field1_0_t field1_0(rStart)[entryCount]<optimize=false>;
+    FSeek(tmp);
+}BaseObjects_Attribute_AttributeBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_Attribute_AttributeBaseObject_Field2_s(int rStart)
+{
+    uint Ref0;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint unk;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(unk==0);
+}BaseObjects_Attribute_AttributeBaseObject_Field2_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_Attribute_AttributeBaseObject_Field3_s(int rStart)
+{
+    uint PathOffset;
+    local string Path = ReadString(rStart + PathOffset);
+}BaseObjects_Attribute_AttributeBaseObject_Field3_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_Attribute_AttributeBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;
+    
+    BaseObjects_Attribute_AttributeBaseObject_Field0_t field0(rStart);
+    uint OTOAS0;
+    uint unk0;
+    uint OTOAS1;
+    uint unk1;
+    BaseObjects_Attribute_AttributeBaseObject_Field3_t field3(rStart);
+    uint unk2;
+    BaseObjects_Attribute_AttributeBaseObject_Field1_t field1(rStart);
+    uint OffsetToOffsetMaybe;
+    uint OTOAS4;
+    uint OTOAS5;
+    
+    //Checks
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    Assert(OTOAS0 == 0);
+    Assert(OTOAS1 == 0);
+    Assert(OTOAS4 == 0);
+    Assert(unk0 == 0);
+    Assert(unk1 == 0);
+}BaseObjects_Attribute_AttributeBaseObject_t<bgcolor=cRed>;

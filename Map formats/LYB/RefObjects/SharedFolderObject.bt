@@ -1,0 +1,63 @@
+//RefObjects/SharedFolder/SharedFolderObject
+
+typedef struct RefObjects_SharedFolder_SharedFolderObject_Field0_0_s(int rStart)
+{
+    uint Ref0;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint OTOAS; 
+    uint Ref0_0;
+    FSeek(Ref0_0 + rStart);
+    uint unk;
+    FSeek(tmp);
+    
+}RefObjects_SharedFolder_SharedFolderObject_Field0_0_t<bgcolor=cRed>;
+
+typedef struct RefObjects_SharedFolder_SharedFolderObject_Field0_s(int rStart)
+{
+    uint Ref0; 
+    uint entryCount;  
+    if(Ref0 == 0)
+        return; 
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    RefObjects_SharedFolder_SharedFolderObject_Field0_0_t field0_0(rStart)[entryCount]<optimize=false>;;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+}RefObjects_SharedFolder_SharedFolderObject_Field0_t<bgcolor=cRed>;
+
+typedef struct RefObjects_SharedFolder_SharedFolderObject_Field1_s(int rStart)
+{
+    uint Ref0; 
+    if(Ref0 == 0)
+        return; 
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    if(Ref0_0 == 0)
+    {    
+        FSeek(tmp);
+        return;
+    }
+    FSeek(Ref0_0 + rStart);
+    char Name[0x10];
+    ubyte unk[0xC];
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+}RefObjects_SharedFolder_SharedFolderObject_Field1_t<bgcolor=cRed>;
+
+typedef struct RefObjects_SharedFolder_SharedFolderObject_s(int rStart)
+{
+    uint reserved0;
+    RefObjects_SharedFolder_SharedFolderObject_Field0_t field0(rStart);
+    uint reserved1;
+    RefObjects_SharedFolder_SharedFolderObject_Field1_t field1(rStart);
+    //Make sure that all these are 0
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    
+}RefObjects_SharedFolder_SharedFolderObject_t<bgcolor=cRed>;

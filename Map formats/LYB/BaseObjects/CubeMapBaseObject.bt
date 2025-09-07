@@ -1,0 +1,24 @@
+//BaseObjects_CubeMap_CubeMapBaseObject
+
+typedef struct BaseObjects_CubeMap_CubeMapBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(Ref0_0 == 0);
+}BaseObjects_CubeMap_CubeMapBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_CubeMap_CubeMapBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;  
+    BaseObjects_CubeMap_CubeMapBaseObject_Field0_t field0(rStart);
+    uint divideMapFolderAssetOffset; //blk_0000
+    //Checks    
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+}BaseObjects_CubeMap_CubeMapBaseObject_t<bgcolor=cRed>;

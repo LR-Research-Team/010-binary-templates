@@ -1,0 +1,67 @@
+//BaseObjects/BG/BGChipBaseObject
+
+typedef struct BaseObjects_BG_BGChipBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    FSeek(Ref0_0 + rStart);
+    uint data[18];
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(Ref0_0);
+}BaseObjects_BG_BGChipBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_BG_BGChipBaseObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint HashStringOffset;
+    local string HashString = ReadString(rStart + HashStringOffset);
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(HashStringOffset);
+}BaseObjects_BG_BGChipBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_BG_BGChipBaseObject_Field3_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint unk0;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(unk0 == 0);
+}BaseObjects_BG_BGChipBaseObject_Field3_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_BG_BGChipBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;
+    BaseObjects_BG_BGChipBaseObject_Field0_t field0(rStart);
+    BaseObjects_BG_BGChipBaseObject_Field1_t field1(rStart);
+    uint unk0;
+    uint unk1;
+    uint ObjectPathStringOffset;  
+    local string ObjectPathString = ReadString(rStart + ObjectPathStringOffset);
+    uint nullStringOffset;  
+    local string nullString = ReadString(rStart + nullStringOffset);    
+    uint OTOASData2;
+    uint nullStringOffsetDup;      
+    BaseObjects_BG_BGChipBaseObject_Field3_t field3(rStart);
+    
+    //Checks
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    Assert(!OTOASData2);
+    Assert(nullString == "");    
+    Assert(nullStringOffset == nullStringOffsetDup);
+    
+}BaseObjects_BG_BGChipBaseObject_t<bgcolor=cRed>;

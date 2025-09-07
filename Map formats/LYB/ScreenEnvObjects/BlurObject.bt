@@ -1,0 +1,9 @@
+//ScreenEnvObjects/Blur/BlurObject
+
+typedef struct ScreenEnvObjects_Blur_BlurObject_s(int rStart)
+{
+    uint reserved0;
+    float unkFloatData[11];
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_Blur_BlurObject_t<bgcolor=cRed>;

@@ -1,0 +1,11 @@
+//BaseObjects_BG_ResourceReferenceObject
+typedef struct BaseObjects_BG_ResourceReferenceObject_s(int rStart)
+{
+    uint32 unk0;
+    uint nullStringOffset;
+    uint reserved0;
+    local string nullString = ReadString(nullStringOffset + rStart);
+    //Checks
+    Assert(unk0 == 0);
+    Assert(reserved0 == 0);
+}BaseObjects_BG_ResourceReferenceObject_t<bgcolor=cRed>;

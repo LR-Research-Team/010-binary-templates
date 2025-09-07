@@ -1,0 +1,54 @@
+//BaseObjects_DrawEnvObjects_Wind_WindBaseObject
+
+typedef struct BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint data;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+}BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field1_0_s(int rStart)
+{
+    uint WindCurveMTBOffset;
+    uint WindCurveMTBSize;
+    local int tmp<hidden=true> = FTell();
+    FSeek( WindCurveMTBOffset + rStart);
+    byte WindCurveMTB[WindCurveMTBSize];    
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+}BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field1_0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint HashStringOffset;
+    BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field1_0_t WindCurveInfo(rStart);
+    local string HashString = ReadString(rStart + HashStringOffset);
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+}BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_DrawEnvObjects_Wind_WindBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;  
+    BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field0_t field0(rStart);
+    BaseObjects_DrawEnvObjects_Wind_WindBaseObject_Field1_t WindInfo(rStart);
+    uint unk0;
+    uint unkStringOffset;
+    local string unkString = ReadString(rStart + unkStringOffset);
+    uint OTOAS0;
+    uint unk1;    
+    //Checks    
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    Assert(OTOAS0 == 0);
+}BaseObjects_DrawEnvObjects_Wind_WindBaseObject_t<bgcolor=cRed>;

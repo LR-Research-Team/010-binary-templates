@@ -1,0 +1,51 @@
+//BaseObjects/TriggerBox/TriggerBoxBaseObject
+
+typedef struct BaseObjects_TriggerBox_TriggerBoxBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;    
+    //TODO
+    Assert(Ref0_0);   
+    FSeek(Ref0_0 + rStart);
+    BigEndian();
+    uint argumentFlags;
+    LittleEndian();
+    FSeek(tmp);   
+}BaseObjects_TriggerBox_TriggerBoxBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_TriggerBox_TriggerBoxBaseObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    if(Ref0 == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    if(Ref0_0 == 0)
+    {    
+        FSeek(tmp);
+        return;
+    }
+    uint Ref0_1;
+    uint unk0;
+    FSeek(Ref0_0 + rStart);
+    uint unk1; //TODO, size 0x14
+    FSeek(tmp);
+    Assert(Ref0_1 ==0);
+    Assert(unk0==0);
+}BaseObjects_TriggerBox_TriggerBoxBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_TriggerBox_TriggerBoxBaseObject_s(int rStart)
+{
+    uint unk;
+    uint reserved0;
+    BaseObjects_TriggerBox_TriggerBoxBaseObject_Field0_t field0(rStart);
+    BaseObjects_TriggerBox_TriggerBoxBaseObject_Field1_t field1(rStart);
+   
+    //Checks
+    Assert(reserved0 == 0);
+}BaseObjects_TriggerBox_TriggerBoxBaseObject_t<bgcolor=cRed>;

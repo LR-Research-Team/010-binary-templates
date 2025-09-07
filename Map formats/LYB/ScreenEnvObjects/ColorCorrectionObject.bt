@@ -1,0 +1,9 @@
+//ScreenEnvObjects/ColorCorrection/ColorCorrectionObject
+
+typedef struct ScreenEnvObjects_ColorCorrection_ColorCorrectionObject_s(int rStart)
+{
+    uint reserved0;
+    float unkFloatData[12];
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_ColorCorrection_ColorCorrectionObject_t<bgcolor=cRed>;

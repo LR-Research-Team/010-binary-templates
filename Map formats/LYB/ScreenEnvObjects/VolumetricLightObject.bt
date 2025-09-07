@@ -1,0 +1,11 @@
+//ScreenEnvObjects/VolumetricLight/VolumetricLightObject
+
+typedef struct ScreenEnvObjects_VolumetricLight_VolumetricLightObject_s(int rStart)
+{
+    uint reserved0;
+    float unkFloatData0[21];
+    uint unk0;
+    float unkFloatData1[5];
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_VolumetricLight_VolumetricLightObject_t<bgcolor=cRed>;

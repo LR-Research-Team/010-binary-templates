@@ -1,0 +1,54 @@
+//BaseObjects/VFX/VFXBaseObject
+
+typedef struct  BaseObjects_VFX_VFXBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    FSeek(Ref0_0 + rStart);
+    byte Data[0x40];
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    local int i<hidden=true> = 0;
+    for(i=0; i < 0x40; i++)
+    {
+         Assert(Data[i] == 0);
+    }
+} BaseObjects_VFX_VFXBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct  BaseObjects_VFX_VFXBaseObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    short Data[4];    
+    FSeek(tmp);
+    //Checks
+    local int i<hidden=true> = 0;
+    for(i=0; i < 3; i++)
+    {
+         Assert(Data[i] == 0); //First 3 seem to always be null
+    }
+} BaseObjects_VFX_VFXBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_VFX_VFXBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;    
+    BaseObjects_VFX_VFXBaseObject_Field0_t field0(rStart);
+    ushort indexMaybe;
+    ushort unk0;   
+    uint SceneNameOffset;
+    uint VfxResNameOffset;
+    uint WeirdSceneNameOffset;
+    BaseObjects_VFX_VFXBaseObject_Field1_t field1(rStart);
+    local string SceneNameString = ReadString(rStart + SceneNameOffset);
+    local string VfxResName = ReadString(rStart + VfxResNameOffset);
+    local string WeirdSceneName = ReadString(rStart + WeirdSceneNameOffset);  
+    //Checks
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    Assert(unk0 == 0x45);
+}BaseObjects_VFX_VFXBaseObject_t<bgcolor=cRed>;

@@ -1,0 +1,27 @@
+//ScreenEnvObjects/Glare/GlareObject
+
+typedef struct ScreenEnvObjects_Glare_GlareObject_Field0_s(int rStart)
+{
+    uint Ref0;    
+    if (!Ref0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint HashMaybe;
+    float Data[11];
+    FSeek(tmp);
+    //Checks
+    Assert(HashMaybe == 0x248d3132);
+}ScreenEnvObjects_Glare_GlareObject_Field0_t<bgcolor=cRed>;
+
+typedef struct ScreenEnvObjects_Glare_GlareObject_s(int rStart)
+{
+    uint reserved0;
+    float unkFloatData[5];
+    uint flagsMaybe;
+    ScreenEnvObjects_Glare_GlareObject_Field0_t field0(rStart);
+    uint unk0;
+    float unkFloatData2[6];
+    //Checks
+    Assert(reserved0 == 0);    
+}ScreenEnvObjects_Glare_GlareObject_t<bgcolor=cRed>;

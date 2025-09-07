@@ -1,0 +1,166 @@
+//MiscObjects/LaySettings/LaySettingsObject
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_0_0_s(int rStart)
+{
+    uint entryNameOffset;
+    uint id;
+    uint flags;
+    uint unkFlagsMaybe;
+    uint reserved0[4];
+    local string entryName = ReadString(rStart + entryNameOffset); 
+    //Checks
+    local int i<hidden=true> = 0;
+    for(i=0; i < 4; i++)
+    {
+         Assert(reserved0[i] == 0); 
+    } 
+}MiscObjects_LaySettings_LaySettingsObject_Field0_0_0_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_0_1_s(int rStart)
+{
+    uint NameOffset;
+    uint unk[3];
+    local string Name = ReadString(rStart + NameOffset); 
+}MiscObjects_LaySettings_LaySettingsObject_Field0_0_1_t<name=this.Name,bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_0_s(int rStart)
+{
+    uint Ref0_0;
+    uint entryCount0;
+    uint Ref0_1;
+    uint entryCount1;
+    local int tmp<hidden=true> = FTell();
+    if(Ref0_0)
+    {
+         FSeek(Ref0_0 + rStart);
+        MiscObjects_LaySettings_LaySettingsObject_Field0_0_0_t field0(rStart)[entryCount0]<optimize=false>;
+    }
+    if(Ref0_1)
+    {
+        FSeek(Ref0_1 + rStart);
+        MiscObjects_LaySettings_LaySettingsObject_Field0_0_1_t field0(rStart)[entryCount1]<optimize=false>;
+    }       
+    FSeek(tmp);
+
+}MiscObjects_LaySettings_LaySettingsObject_Field0_0_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_1_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint unk[2];
+    FSeek(tmp);
+
+}MiscObjects_LaySettings_LaySettingsObject_Field0_1_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_2_0_s(int rStart)
+{
+    uint NameOffset;
+    uint HashOffset;
+    local string Name = ReadString(rStart + NameOffset); 
+    local string Hash = ReadString(rStart + HashOffset); 
+}MiscObjects_LaySettings_LaySettingsObject_Field0_2_0_t<name=this.Name,bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_2_s(int rStart)
+{
+    uint Ref0;
+    uint entryCount;
+    local int tmp<hidden=true> = FTell();
+    MiscObjects_LaySettings_LaySettingsObject_Field0_2_0_t NameHashPairs(rStart)[entryCount]<optimize=false>;
+    FSeek(tmp);
+
+}MiscObjects_LaySettings_LaySettingsObject_Field0_2_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    MiscObjects_LaySettings_LaySettingsObject_Field0_1_t field0_1(rStart);
+    int reserved0[7];
+    MiscObjects_LaySettings_LaySettingsObject_Field0_2_t field0_2(rStart);
+    MiscObjects_LaySettings_LaySettingsObject_Field0_0_t field0_0(rStart);
+    int reserved1[2];
+    FSeek(tmp);
+    //Checks
+    local int i<hidden=true> = 0;
+    for(i=0; i < 7; i++)
+    {
+         if (i==2)
+            continue;
+         Assert(reserved0[i] == 0); 
+    }   
+    for(i=0; i < 2; i++)
+    {
+         Assert(reserved1[i] == 0); 
+    }    
+}MiscObjects_LaySettings_LaySettingsObject_Field0_t<bgcolor=cRed>;
+
+typedef struct DrawEnvObjectTableEntry_s
+{
+    uint DrawEnvObjectID;
+    uint DrawEnvObjectOffset;    
+}DrawEnvObjectTableEntry_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field1_s(int rStart)
+{
+    uint DrawEnvObjectTableOffset;
+    uint DrawEnvObjectEntryCount;
+    local int tmp<hidden=true> = FTell();
+    FSeek(DrawEnvObjectTableOffset + rStart); 
+    DrawEnvObjectTableEntry_t DrawEnvObjects[DrawEnvObjectEntryCount];  
+    FSeek(tmp);
+    
+}MiscObjects_LaySettings_LaySettingsObject_Field1_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field2_0_s(int rStart)
+{
+    uint idx;
+    float unkFloat;   
+}MiscObjects_LaySettings_LaySettingsObject_Field2_0_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_Field2_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    MiscObjects_LaySettings_LaySettingsObject_Field2_0_t Entries(rStart)[4]<optimize=false>;
+    FSeek(tmp);
+    
+}MiscObjects_LaySettings_LaySettingsObject_Field2_t<bgcolor=cRed>;
+
+typedef struct MiscObjects_LaySettings_LaySettingsObject_s(int rStart)
+{
+    uint reserved0[7]; 
+    MiscObjects_LaySettings_LaySettingsObject_Field2_t field2(rStart);
+    uint reserved1[3];
+    MiscObjects_LaySettings_LaySettingsObject_Field0_t DrawEnvObjectTableInfo(rStart);
+    Vector4 scaleMaybe;
+    Vector4 BBoxMinMaybe;
+    Vector4 BBoxMaxMaybe;
+    uint unk0[4]; //Always 3 * 01 and padding?  
+    MiscObjects_LaySettings_LaySettingsObject_Field1_t DrawEnvObjectTableInfo(rStart);
+    uint reserved2[2];      
+    
+    //Checks
+    local int i<hidden=true> = 0;
+    for(i=0; i < 7; i++)
+    {
+         Assert(reserved0[i] == 0); 
+    }   
+    for(i=0; i < 3; i++)
+    {
+         Assert(reserved1[i] == 0); 
+    }
+    for(i=0; i < 3; i++)
+    {
+         Assert(unk0[i] == 1); 
+    } 
+    for(i=0; i < 2; i++)
+    {
+         Assert(reserved2[i] == 0); 
+    }
+    
+    
+}MiscObjects_LaySettings_LaySettingsObject_t<bgcolor=cRed>;

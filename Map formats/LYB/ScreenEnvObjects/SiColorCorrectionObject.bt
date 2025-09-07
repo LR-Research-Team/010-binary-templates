@@ -1,0 +1,29 @@
+//ScreenEnvObjects/SiColorCorrection/SiColorCorrectionObject
+
+typedef struct ScreenEnvObjects_SiColorCorrection_SiColorCorrectionObject_Field0_s(int rStart)
+{
+    uint LUTHeightMaybe;
+    uint LUTCheckSumOffsetMaybe;
+    uint LUTOffset;    
+    uint LUTSizeInBytes;
+    if(LUTOffset == 0)
+        return;
+    local int tmp<hidden=true> = FTell();
+    FSeek(LUTCheckSumOffsetMaybe + rStart);
+    byte LUTCheckSumMaybe[16];
+    FSeek(LUTOffset + rStart);
+    byte LUTData[LUTSizeInBytes];
+    FSeek(tmp);
+    //Checks
+    Assert(LUTOffset);  
+}ScreenEnvObjects_SiColorCorrection_SiColorCorrectionObject_Field0_t<bgcolor=cRed>;
+
+typedef struct ScreenEnvObjects_SiColorCorrection_SiColorCorrectionObject_s(int rStart)
+{
+    uint reserved0;   
+    uint LUTHeaderMaybe;    
+    ScreenEnvObjects_SiColorCorrection_SiColorCorrectionObject_Field0_t LUT(rStart);
+    float unkFloatData[31];
+    //Checks
+    Assert(reserved0 == 0);   
+}ScreenEnvObjects_SiColorCorrection_SiColorCorrectionObject_t<bgcolor=cRed>;

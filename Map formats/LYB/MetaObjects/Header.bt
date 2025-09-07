@@ -1,0 +1,20 @@
+typedef struct MetaObjects_Header_s(int rStart)
+{
+    uint OffsetPackRef;
+    uint OffsetPackEntryCount;
+    
+    uint32 ObjectNameOffset;
+    uint32 ObjectNameOffsetDup;
+    uint32 NamespaceNameOffset;
+    uint32 WhiteOffset;
+    uint32 SubNameOffset;
+    uint32 VersionOffset;
+    Assert(ObjectNameOffset == ObjectNameOffsetDup);
+    
+    local string ObjectName = ReadString(rStart + ObjectNameOffset);   
+    local string NamespaceName = ReadString(rStart + NamespaceNameOffset);
+    local string WhiteName = ReadString(rStart + WhiteOffset);
+    local string SubNameName = ReadString(rStart + SubNameOffset);
+    local string VersionName = ReadString(rStart + VersionOffset);
+    
+} MetaObjects_Header_t<bgcolor=cRed>;

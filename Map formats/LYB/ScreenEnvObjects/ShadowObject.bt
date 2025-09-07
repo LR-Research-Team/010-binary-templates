@@ -1,0 +1,12 @@
+//ScreenEnvObjects/Shadow/ShadowObject
+
+typedef struct ScreenEnvObjects_Shadow_ShadowObject_s(int rStart, int assetSize)
+{
+    uint reserved0;   
+    if (assetSize == 0x80) //XIII-2    
+        float unkFloatData[27];
+    else //LR
+        float unkFloatData[47];        
+    //Checks
+    Assert(reserved0 == 0);    
+}ScreenEnvObjects_Shadow_ShadowObject_t<bgcolor=cRed>;

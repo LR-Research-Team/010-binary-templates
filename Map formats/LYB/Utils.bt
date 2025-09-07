@@ -1,0 +1,69 @@
+//Version 0.1
+
+#ifndef UTILS
+#define UTILS
+
+typedef struct VECTOR3 {
+    float x<name="x">;
+    float y<name="y">;
+    float z<name="z">;
+} Vector3;
+
+typedef struct VECTOR4 {
+    float x<name="x">;
+    float y<name="y">;
+    float z<name="z">;
+    float w<name="z">;
+} Vector4;
+
+void Align(int n) {
+    local int value = FTell() % n;
+
+    if (value) {
+        FSkip(n - value);
+    }
+}
+
+typedef struct CelestialSphere_FloatField_s(int rStart)
+{
+    uint DataOffs;
+    if(DataOffs == 0)
+        return;
+    local int tmp<hidden=true> = FTell();    
+    FSeek(DataOffs + rStart);
+    ushort datatype;
+    BigEndian();
+    switch(datatype)
+    {
+        case 0x0000:
+            float data[17];
+            break;
+        case 0x0100:
+            float data[2];
+            break;
+        case 0x0101:
+            float data[6];
+            break;
+        case 0x0006:
+        case 0x0106:
+        case 0x0206:
+            float data[32];
+            break;
+        case 0x0300:
+            float data[16];
+            break;
+        case 0x0907:
+        case 0x1107:        
+        case 0x1907:
+            float data[55];
+            break;
+        default:
+            Assert(0);
+            break;
+    }
+    LittleEndian();
+    FSeek(tmp);
+    
+}CelestialSphere_FloatField_t<bgcolor=cRed>;
+
+#endif //UTILS

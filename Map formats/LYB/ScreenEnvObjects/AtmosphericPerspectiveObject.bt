@@ -1,0 +1,10 @@
+//ScreenEnvObjects/AtmosphericPerspective/AtmosphericPerspectiveObject
+
+typedef struct ScreenEnvObjects_AtmosphericPerspective_AtmosphericPerspectiveObject_s(int rStart)
+{
+    uint reserved0;   
+    uint flagsMaybe;
+    float unkFloatData[11];   
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_AtmosphericPerspective_AtmosphericPerspectiveObject_t<bgcolor=cRed>;

@@ -1,0 +1,54 @@
+//BaseObjects_SE_SEBaseObject
+
+typedef struct BaseObjects_SE_SEBaseObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(Ref0_0 == 0);
+}BaseObjects_SE_SEBaseObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_SE_SEBaseObject_Field1_s(int rStart)
+{
+    uint DataOffs;
+    uint DataInfo;
+    local int tmp<hidden=true> = FTell();
+    FSeek(DataOffs + rStart);
+    byte DataBlock[ReadUShort(FTell())];
+    FSeek(tmp);
+}BaseObjects_SE_SEBaseObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_SE_SEBaseObject_Field2_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    uint Ref0_1;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(Ref0_0 == 0);
+    Assert(Ref0_1 == 0xFFFF);
+}BaseObjects_SE_SEBaseObject_Field2_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_SE_SEBaseObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;    
+    BaseObjects_SE_SEBaseObject_Field0_t field0(rStart);
+    uint BGStringOffset;
+    local string BGString = ReadString(rStart + BGStringOffset);
+    uint unk0;
+    BaseObjects_SE_SEBaseObject_Field1_t field1(rStart);
+    BaseObjects_SE_SEBaseObject_Field2_t field2(rStart);
+    
+    //Checks
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+    Assert(unk0 == 0);
+}BaseObjects_SE_SEBaseObject_t<bgcolor=cRed>;

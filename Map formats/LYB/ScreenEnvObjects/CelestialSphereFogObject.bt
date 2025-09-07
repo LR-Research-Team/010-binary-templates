@@ -1,0 +1,10 @@
+//ScreenEnvObjects/CelestialSphere/CelestialSphereFogObject
+
+typedef struct ScreenEnvObjects_CelestialSphere_CelestialSphereFogObject_s(int rStart)
+{
+    uint reserved0;
+    CelestialSphere_FloatField_t field0(rStart);
+    uint unk;
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_CelestialSphere_CelestialSphereFogObject_t<bgcolor=cRed>;

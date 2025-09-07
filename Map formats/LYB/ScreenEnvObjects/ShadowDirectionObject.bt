@@ -1,0 +1,10 @@
+//ScreenEnvObjects/ShadowDirection/ShadowDirectionObject
+
+typedef struct ScreenEnvObjects_ShadowDirection_ShadowDirectionObject_s(int rStart)
+{
+    uint reserved0;
+    CelestialSphere_FloatField_t field0(rStart);
+    uint unk;
+    //Checks
+    Assert(reserved0 == 0);  
+}ScreenEnvObjects_ShadowDirection_ShadowDirectionObject_t<bgcolor=cRed>;

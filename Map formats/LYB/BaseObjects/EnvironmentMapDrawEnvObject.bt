@@ -1,0 +1,46 @@
+//BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject
+
+typedef struct BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field0_s(int rStart)
+{
+    uint Ref0;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    uint Ref0_0;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);
+    Assert(Ref0_0 == 0);
+}BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field1_0_s(int rStart)
+{
+    uint NullStringOffset; //Parent maybe?
+    uint HashStringOffset;    
+    local string NullString = ReadString(rStart + NullStringOffset);
+    local string HashString = ReadString(rStart + HashStringOffset);
+    //Checks
+    Assert(NullString=="");       
+} BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field1_0_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field1_s(int rStart)
+{
+    uint Ref0;
+    uint entryCount;
+    local int tmp<hidden=true> = FTell();
+    FSeek(Ref0 + rStart);
+    BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field1_0_t NameInfo(rStart)[entryCount]<optimize=false>;
+    FSeek(tmp);
+    //Checks
+    Assert(Ref0);    
+}BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field1_t<bgcolor=cRed>;
+
+typedef struct BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_s(int rStart)
+{
+    uint reserved0;
+    uint reserved1;  
+    BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field0_t field0(rStart);
+    BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_Field1_t field1(rStart);
+    //Checks    
+    Assert(reserved0 == 0);
+    Assert(reserved1 == 0);
+}BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_t<bgcolor=cRed>;

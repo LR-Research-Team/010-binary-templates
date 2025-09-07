@@ -1,20 +1,23 @@
+//Version 0.1
+
 //------------------------------------------------
-//--- 010 Editor v12.0beta1 Binary Template
-//      File: lyb.bt
-//   Authors: Joschka, GreenThumb2
-//   Version: 0.3
-//   Purpose: Parsing lyb files
-//  Category: Game file
-// File Mask: *.lyb
-//  ID Bytes: LYB
-//   History: 
+//TODO
+// 
+//
+// 
+// 
+//
+//
+//
+//
 //------------------------------------------------
 
-#include "../Utils/Utils.bt"
-#include "LYB/LYBUnamedAssets.bt"
-#include "LYB/LYBAssets.bt"
+#include "LYB/Utils.bt"
+#include "LYB/LybObject.bt"
 
-/* SEDBlyb */
+local int bDebug<hidden=true> = 0; //Prevents "data objects" from overwriting with their color
+local int bHideHeaders<hidden=true> = true; //Hide some headers for better visibility
+
 typedef struct SEDBHeader_s {
     char FourCC[4]<name="FourCC">;
     char type[4]<name="Section type">;
@@ -25,127 +28,301 @@ typedef struct SEDBHeader_s {
     ushort resOffset<name="Resource offset">;
     int  size<name="Size">;
     int reserved[7]<name="Reserved">;    
-    
 }SEDBHeader_t<name="SEDBHeader">;
 
-/* lyb resource header*/
 typedef struct lybHeader_s {
     char FourCC[4]<name="FourCC">;
     uint32 size<name="Resource size">;
-    uint16 assetStructCount<name="Asset struct count">;
-    uint16 assetCount<name="Asset count">;
+    uint16 objectStructCount<name="Object struct count">;
+    uint16 objectCount<name="Object count">;
     uint16 unk[2];
-    uint32 assetStructOffset<name="Asset struct offset">;
-    uint32 headerSize<name="Header size">;
-    
-}lybHeader_t<name="SEDBHeader">;
+    uint32 objectStructOffset<name="Object struct offset">;
+    uint32 headerSize<name="Header size">;    
+}lybHeader_t<name="Lyb Header">;
 
-typedef enum<ushort> assetStructDatatype_e
+typedef enum<ushort> objectStructDatatype_e
 {
-    OffsetToOtherAsset = 0,
-    OffsetToString = 2
-    
-}EAssetStructDatatype<name="Asset struct data type">;
+    OffsetToOtherObject = 0,
+    OffsetToString = 2    
+}EObjectStructDatatype<name="Object struct data type">;
 
-typedef struct assetStructHeader_s
+typedef struct objectStructHeader_s
 {
-    uint32 assetOffset<name="Asset offset">;
-    uint32 assetCount<name="Asset count">;
-    uint32 assetSize<name="Asset size">;
-}assetStructHeader_t<name="Asset structure header">;
+    uint32 objectOffset<name="Object offset",bgcolor=cDkYellow>;
+    uint32 objectCount<name="Object count",bgcolor=cDkYellow>;
+    uint32 objectSize<name="Object size",bgcolor=cDkYellow>;
+}objectStructHeader_t<name="Object structure header", hidden=bHideHeaders>;
 
-typedef struct assetStructDataTypes_s        
+typedef struct objectStructDataTypes_s        
 {
-    uint16 byteOffset<name="Byte offset of start of type">;
-    EAssetStructDatatype dataType<name="Data type ">;
-}assetStructDataTypes_t<name="Asset structure datatype">;
+    uint16 byteOffset<name="Byte offset of start of type",bgcolor=cDkPurple>;
+    EObjectStructDatatype dataType<name="Data type ",bgcolor=cDkPurple>;
+}objectStructDataTypes_t<name="Object structure datatype",bgcolor=cDkPurple, hidden=bHideHeaders>;
 
-typedef struct assetStruct_s(int rStart) {
-    uint32 headerOffset<name="Header offset">;
-    uint32 dataTypeOffset<name ="Data Type / Description Offset">;
-    uint32 headerCount<name="Header count">;
-    Assert(headerCount==1); //Check if always 1
-    uint32 dataTypeCount<name="assetStructDataType count">;
 
-    local int checkpoint<hidden=true> = FTell();
-    FSeek(rStart + headerOffset);
-    assetStructHeader_t assetStructHeader;
-    FSeek(rStart + dataTypeOffset);
-    assetStructDataTypes_t assetStructDataTypes[dataTypeCount];
-    FSeek(checkpoint);
-}assetStruct_t<name="Asset struct">;
-
-/* Asset header*/
-typedef struct asset_s(int rStart, int bIsFirstEntry) {
-    uint32 id<name="ID ?", comment="Except for first 2 entries seems like an ID",bgcolor=cBlue>;
-    uint32 hash<name="Hash ?", comment = "Not sure",bgcolor=cBlue>;
-    uint32 assetTypeOffset<name="Asset type offset", comment = "Base type if 0 or first entry",bgcolor=cBlue>;
-    uint32 assetNameOffset<name="Asset name offset",bgcolor=cBlue>;
-
-    //For the asset type, we need to make sure the offset is not 0 (base type) or the first entry (base type too it seems)
-    if (!assetTypeOffset || bIsFirstEntry)
+/* Object header*/
+typedef struct object_s(int rStart, int idx, int objectSize) {
+    local string objectTypeName<hidden=true> = "";
+    local int bIsProxy<hidden=true> = 0;
+    local int start<hidden=true> = FTell();
+    local int curOfs<hidden=true> = FTell();
+    local string objectType010Display<hidden=true> = "";
+    //Meta objects
+    switch(idx)
     {
-        local string assetName<name="Base asset"> = ReadString(rStart + assetNameOffset);
-        switch(assetName)
+        case 0:
+            MetaObjects_Header_t object(rStart);
+            objectTypeName = "Meta Header";
+            objectType010Display = objectTypeName;
+            return;
+        case 1:
+            MetaObjects_OffsetPack_t object(rStart, objectSize);
+            objectTypeName = "Offset Pack";
+            objectType010Display = objectTypeName;
+            return;
+        case 2:
+            MetaObjects_PackageSettings_t object(rStart);
+            objectTypeName = "Package Settings";
+            objectType010Display = objectTypeName;
+            return;
+        case 3:
+            MetaObjects_Desc_t object(rStart);
+            objectTypeName = "Desc";
+            objectType010Display = objectTypeName;
+            return;
+        
+    }
+    
+    //Is it just data ? If so treat as is.
+    if (ReadUShort(curOfs+2) != 0xF) 
+    {
+        if (bDebug)
+            byte Data[objectSize]<bgcolor = cYellow>;
+        else            
+            byte Data[objectSize]<bgcolor = cNone>;
+        objectTypeName = "Data Object";
+        objectType010Display = "Data Object";
+        return;
+    }
+    
+    //Actual object, check if proxy or not
+    bIsProxy = !ReadUInt(curOfs + 8);
+    if(bIsProxy)
+    {
+        uint id<name="ID",bgcolor=cBlue>;
+        uint hash<name="Hash",bgcolor=cBlue>;
+        uint objectTypeOffset<name="Object type offset",bgcolor=cBlue>;
+        uint objectNameOffset<name="Object name offset",bgcolor=cBlue>;
+        uint reserved0<bgcolor=cBlue>;        
+        uint baseObjectOffset<name="Parent Type offset",bgcolor=cBlue>;
+        if(baseObjectOffset)
         {
-            case "MiscObjects/LaySettings/LaySettingsObject":
-                LaySettingsObject_t laysetobj(rStart, 1)<name="Layout settings object", open=true>;
-                break;
-            default:                
-                break;
+            local uint t<hidden=true> = ReadUInt(rStart + baseObjectOffset + 12);
+            local string baseObjectName<name="Parent Type"> = ReadString(rStart + t);
         }
+        
+        Assert(reserved0 == 0);        
+        objectTypeName = ReadString(rStart + objectNameOffset);       
+        objectTypeName = "Proxy " + objectTypeName;
+        objectType010Display = "Proxy Object";
     }
     else
     {
-        local string assetName<name="Asset name"> = ReadString(rStart + assetNameOffset);
+        uint32 id<name="ID",bgcolor=cGreen>;
+        uint32 hash<name="Hash",bgcolor=cGreen>;
+        uint32 objectTypeOffset<name="Object type offset",bgcolor=cGreen>;
+        uint32 objectNameOffset<name="Object name offset",bgcolor=cGreen>;
+        
+        objectTypeName = ReadString(rStart + objectNameOffset);
         //jump to the offset, grab the base type from there
-        local uint tmp<hidden=true> = ReadUInt(rStart + assetTypeOffset + 12);
-        local string assetType<name="Asset type"> = ReadString(rStart + tmp);
-
-        //Parse the data depending whether or not the asset has already been documented already in LYBAssets.bt
-        switch(assetType)
-        {
-            case "RefObjects/InstanceObject":
-                InstanceObject_t instanceobj(rStart)<name="Instance object",open=true>;
+        local uint tmp<hidden=true> = ReadUInt(rStart + objectTypeOffset + 12);
+        local string objectType<name="Object type"> = ReadString(rStart + tmp);
+        local string objectName<name="Object name"> = ReadString(rStart + objectNameOffset);
+        
+        objectType010Display = objectType;
+        //Parse the data depending whether or not the object has already been documented already in LYBObjects.bt
+        switch(objectType)
+        {  
+            //Base objects
+            case "BaseObjects/Attribute/AttributeBaseObject":
+                BaseObjects_Attribute_AttributeBaseObject_t object(rStart)<name="Attribute Base Object", open=true>;
                 break;
             case "BaseObjects/BG/BGChipBaseObject":
-                BGChipBaseObject_t baseobj(rStart)<name="BG Chip Base object",open=true>;
+                BaseObjects_BG_BGChipBaseObject_t object(rStart)<name="BG Chip Base Object", open=true>;
                 break;
+            case "BaseObjects/BG/ResourceReferenceObject":
+                BaseObjects_BG_ResourceReferenceObject_t object(rStart)<name="Resource Reference Object", open=true>;
+                break; 
+            case "BaseObjects/CubeMap/CubeMapBaseObject":
+                BaseObjects_CubeMap_CubeMapBaseObject_t object(rStart)<name="CubeMap Base Object", open=true>;
+                break;  
+            case "BaseObjects/DrawEnvObjects/Wind/WindBaseObject":
+                BaseObjects_DrawEnvObjects_Wind_WindBaseObject_t object(rStart)<name="Wind Base Object", open=true>;
+                break;
+            case "BaseObjects/EnvironmentMapDrawEnv/EnvironmentMapDrawEnvObject":
+                BaseObjects_EnvironmentMapDrawEnv_EnvironmentMapDrawEnvObject_t object(rStart)<name="Environment Map DrawEnv Object", open=true>;
+                break;  
+            case "BaseObjects/EnemyPath/EnemyPathBaseObject":
+                BaseObjects_EnemyPath_EnemyPathBaseObject_t object(rStart)<name="Enemy Path Base Object", open=true>;
+                break;  
+            case "BaseObjects/Light/LightBaseObject":
+                BaseObjects_Light_LightBaseObject_t object(rStart)<name="Light Base Object", open=true>;
+                break;    
+            case "BaseObjects/Light/LightSetObject":
+                BaseObjects_Light_LightSetObject_t object(rStart)<name="Light Set Object", open=true>;
+                break;                        
+            case "BaseObjects/Null/NullBaseObject":
+                BaseObjects_Null_NullBaseObject_t object(rStart)<name="Null Base Object", open=true>;
+                break;  
+            case "BaseObjects/PositionMarker/PositionMarkerBaseObject":
+                BaseObjects_PositionMarker_PositionMarkerBaseObject_t object(rStart)<name="Position Marker Base Object", open=true>;
+                break;
+            case "BaseObjects/ScreenEnv/ScreenEnvBaseObject":
+                BaseObjects_ScreenEnv_ScreenEnvBaseObject_t object(rStart, objectSize)<name="ScreenEnv Base Object", open=true>;
+                break;      
+            case "BaseObjects/SE/SEBaseObject":
+                BaseObjects_SE_SEBaseObject_t object(rStart)<name="SE Base Object", open=true>;
+                break;
+            case "BaseObjects/TriggerBox/TriggerBoxBaseObject":
+                BaseObjects_TriggerBox_TriggerBoxBaseObject_t object(rStart)<name="Trigger Box Base Object", open=true>;
+                break;
+            case "BaseObjects/VFX/VFXBaseObject":
+                BaseObjects_VFX_VFXBaseObject_t object(rStart)<name="VFX Base Object", open=true>;
+                break;
+            
+            //DrawEnv Objects
+            case "DrawEnvObjects/DrawEnv/DrawEnvObject":
+                DrawEnvObjects_DrawEnv_DrawEnvObject_t object(rStart)<name="DrawEnv Object", open=true>;
+                break;
+                
+            //Misc objects
             case "MiscObjects/LaySettings/LaySettingsObject":
-                LaySettingsObject_t laysetobj(rStart, 0)<name="Layout settings object", open=true>;
+                MiscObjects_LaySettings_LaySettingsObject_t object(rStart)<name="Layout Settings Object", open=true>;
                 break;
-            default:
+            case "MiscObjects/TargetViewerSettings/TargetViewerSettingsObject":
+                MiscObjects_TargetViewerSettings_TargetViewerSettingsObject_t object(rStart)<name="Target Viewer Settings Object", open=true>;
                 break;
+            
+            //Ref objects
+            case "RefObjects/InstanceObject":
+                RefObjects_InstanceObject_t object(rStart)<name="Instance Object",open=true>;
+                break;
+            case "RefObjects/SharedFolder/DivideMap/DivideMapFolderObject":
+                RefObjects_SharedFolder_DivideMap_DivideMapFolderObject_t object(rStart)<name="Divide Map Folder Object",open=true>;
+                break;
+            case "RefObjects/SharedFolder/SharedFolderObject":
+                RefObjects_SharedFolder_SharedFolderObject_t object(rStart)<name="Shared Folder Object",open=true>;
+                break;
+                
+            //ScreenEnv objects
+            case "ScreenEnvObjects/AtmosphericPerspective/AtmosphericPerspectiveObject":
+                ScreenEnvObjects_AtmosphericPerspective_AtmosphericPerspectiveObject_t object(rStart)<name="Atmospheric Perspective Object",open=true>;
+                break;
+            case "ScreenEnvObjects/Blur/BlurObject":
+                ScreenEnvObjects_Blur_BlurObject_t object(rStart)<name="Blur Object",open=true>;
+                break;
+            case "ScreenEnvObjects/CelestialSphere/CelestialSphereObject":
+                ScreenEnvObjects_CelestialSphere_CelestialSphereObject_t object(rStart)<name="Celestial Sphere Object",open=true>;
+                break;
+            case "ScreenEnvObjects/CelestialSphere/CelestialSphereExponentialHazeObject":
+                ScreenEnvObjects_CelestialSphere_CelestialSphereExponentialHazeObject_t object(rStart)<name="Celestial Sphere Exponential Haze Object",open=true>;
+                break;
+            case "ScreenEnvObjects/CelestialSphere/CelestialSphereFogObject":
+                ScreenEnvObjects_CelestialSphere_CelestialSphereFogObject_t object(rStart)<name="Celestial Sphere Exponential Haze Object",open=true>;
+                break;
+            case "ScreenEnvObjects/ColorCorrection/ColorCorrectionObject":
+                ScreenEnvObjects_ColorCorrection_ColorCorrectionObject_t object(rStart)<name="Color Correction Object",open=true>;
+                break;
+            case "ScreenEnvObjects/FilmicCorrection/FilmicCorrectionObject":
+                ScreenEnvObjects_FilmicCorrection_FilmicCorrectionObject_t object(rStart)<name="Filmic Correction Object",open=true>;
+                break;
+            case "ScreenEnvObjects/Fog/FogObject":
+                ScreenEnvObjects_Fog_FogObject_t object(rStart)<name="Fog Object",open=true>;
+                break;
+            case "ScreenEnvObjects/Glare/GlareObject":
+                ScreenEnvObjects_Glare_GlareObject_t object(rStart)<name="Glare Object",open=true>;
+                break;
+            case "ScreenEnvObjects/PropagateMesh/PropagateMeshObject":
+                ScreenEnvObjects_PropagateMesh_PropagateMeshObject_t object(rStart)<name="Propagate Mesh Object",open=true>;
+                break;
+            case "ScreenEnvObjects/Shadow/ShadowObject":
+                ScreenEnvObjects_Shadow_ShadowObject_t object(rStart, objectSize)<name="Shadow Object",open=true>;
+                break;
+            case "ScreenEnvObjects/ShadowDirection/ShadowDirectionObject":
+                ScreenEnvObjects_ShadowDirection_ShadowDirectionObject_t object(rStart)<name="Shadow Direction Object",open=true>;
+                break;
+            case "ScreenEnvObjects/SiColorCorrection/SiColorCorrectionObject":
+                ScreenEnvObjects_SiColorCorrection_SiColorCorrectionObject_t object(rStart)<name="SiColor Correction Object",open=true>;
+                break;            
+            case "ScreenEnvObjects/VolumetricLight/VolumetricLightObject":
+                ScreenEnvObjects_VolumetricLight_VolumetricLightObject_t object(rStart)<name="Volumetric Light Object",open=true>;
+                break;                            
+            default:                
+                Assert(0, objectType + " not implemented");
+                break;
+                
+        
         }
+        
     }
-}asset_t<name="Asset">;
+    
+    FSeek(start + objectSize);
+   
+}object_t<name="Object", read=this.objectType010Display>;
 
-typedef struct assetStructContainer_s(int structCount, int rStart)
-{
-    assetStruct_t assetStruct(rStart)[structCount]<optimize=false>;
-}assetStructContainer_t<name = "Asset structures">;
+typedef struct objectStructMetaHeader_s{
+    uint32 headerOffset<name="Header offset",bgcolor=cDkBlue>;
+    uint32 dataTypeOffset<name ="Data Type / Description Offset",bgcolor=cDkBlue>;
+    uint32 headerCount<name="Header count",bgcolor=cDkBlue>;
+    Assert(headerCount==1); //Check if always 1
+    uint32 dataTypeCount<name="objectStructDataType count",bgcolor=cDkBlue>;
+}objectStructMetaHeader_t<hidden=bHideHeaders>;
 
-typedef struct assetContainer_s(int assetCount, int rStart)
+typedef struct objectStruct_s(int rStart, int idx) {
+    objectStructMetaHeader_t metaHeader<name="Object structure meta Header">;
+
+    local int checkpoint<hidden=true> = FTell();
+    
+    //Parse the struct info
+    FSeek(rStart + metaHeader.headerOffset);
+    objectStructHeader_t objectStructHeader;
+    FSeek(rStart + metaHeader.dataTypeOffset);
+    objectStructDataTypes_t objectStructDataTypes[metaHeader.dataTypeCount]<optimize=false>;
+    
+    //Parse the actual objects
+    FSeek(rStart + objectStructHeader.objectOffset);
+    object_t Object(rStart, idx, objectStructHeader.objectSize)[objectStructHeader.objectCount]<optimize=false, name=this.objectTypeName>;
+    
+    
+    
+    FSeek(checkpoint);
+}objectStruct_t<name=(Strstr(Object[0].objectType010Display, "Instance") == -1 ? Object[0].objectType010Display : "RefObjects/InstanceObject")>;
+//Ternary statement above is here to avoid confusing display based on more explicit naming conventions for instances
+
+
+typedef struct objectStructContainer_s(int structCount, int rStart)
 {
     local int i<hidden=true>;
-    for(i = 0; i < assetCount; i++)
+    for(i = 0; i < structCount; i++)
     {
-        FSeek(rStart + assetOffsets[i]);
-        asset_t asset(rStart, !i);
+        objectStruct_t objectStruct(rStart, i);
     }
-}assetContainer_t<name = "Assets">;
+}objectStructContainer_t<name = "Object structures">;
 
 /* Parsing logic */
 struct FILE {
 
     /* Header info parsing*/
-    SEDBHeader_t sedbHeader<name="SEDB Header">;
+    SEDBHeader_t sedbHeader<name="SEDB Header",bgcolor=cDkPurple>;
     FSeek(sedbHeader.resOffset);
     local int rStart<hidden=true> = FTell(); //All offsets in the resource start from here
-    lybHeader_t lybHeader<name="lyb Header">;
+    lybHeader_t lybHeader<name="Lyb Header",bgcolor=cDkPurple>;
     FSeek(rStart + lybHeader.headerSize);
-    uint32 assetOffsets[lybHeader.assetCount]<name="Asset offsets">;
-    FSeek(rStart + lybHeader.assetStructOffset);
-    assetStructContainer_t assetStructContainer(lybHeader.assetStructCount,rStart)<name="Asset structures">;   
-    assetContainer_t assetContainer(lybHeader.assetCount, rStart);
-} File<name="LYB",bgcolor=cDkPurple, open=true>;
+    uint32 objectOffsets[lybHeader.objectCount]<name="Object offsets",bgcolor=cDkAqua>;
+    FSeek(rStart + lybHeader.objectStructOffset);
+    objectStructContainer_t objectStructContainer(lybHeader.objectStructCount,rStart)<name="Object structures", optimize=false>;
+    
+    local int i<hidden=true> = 0;   
+        
+    //objectContainer_t objectContainer(lybHeader.objectCount, rStart);
+} File<name="LYB", open=true>;

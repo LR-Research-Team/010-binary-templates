@@ -1,0 +1,5 @@
+typedef struct MetaObjects_OffsetPack_s(int rStart, int size)
+{
+    uint Offsets[size/4];
+    
+} MetaObjects_OffsetPack_t<bgcolor=cRed>;
